@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timeline Picker — Mobile Interaction Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family:'DM Sans',sans-serif; background:#f5f4f0; color:#1a1a1a; min-height:100vh; padding:24px 16px 48px; }
+
+header { max-width:480px; margin:0 auto 28px; }
+.back { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:#888; text-decoration:none; margin-bottom:20px; transition:color .15s; }
+.back:hover { color:#1a1a1a; }
+.back::before { content:'←'; }
+h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; }
+.subtitle { font-size:13px; color:#888; }
+.tag-header { display:inline-block; font-size:11px; background:#e8e6df; color:#666; border-radius:20px; padding:2px 10px; margin-top:8px; }
+
+.card { max-width:480px; margin:0 auto 16px; background:#fff; border-radius:16px; padding:20px; border:0.5px solid #e0ddd6; }
+.card-label { font-size:11px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:#aaa; margin-bottom:12px; }
+
+.tabs { display:flex; gap:6px; margin-bottom:16px; }
+.tab { flex:1; padding:8px 0; border:0.5px solid #e0ddd6; border-radius:10px; background:transparent; font-size:12px; font-family:inherit; color:#888; cursor:pointer; text-align:center; transition:all .15s; }
+.tab.active { background:#1a1a1a; color:#fff; border-color:#1a1a1a; }
+
+.legend { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+.legend-item { display:flex; align-items:center; gap:5px; font-size:11px; color:#999; }
+.legend-dot { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
+
+.timeline { height:400px; overflow-y:scroll; position:relative; border:0.5px solid #e8e6df; border-radius:12px; background:#fafaf8; }
+.tl-inner { position:relative; height:1040px; }
+.hour-row { position:absolute; left:0; right:0; display:flex; align-items:flex-start; padding:0 8px; pointer-events:none; }
+.hour-label { width:42px; font-size:11px; color:#bbb; padding-top:2px; flex-shrink:0; font-family:'DM Mono',monospace; }
+.hour-line { flex:1; height:0.5px; background:#e8e6df; margin-top:8px; }
+.quarter-line { position:absolute; left:50px; right:8px; height:0.5px; background:#eeece7; opacity:0.7; pointer-events:none; }
+
+.ev { position:absolute; border-radius:8px; overflow:visible; font-size:11px; }
+.ev.preset { background:#e8f5ee; border-left:3px solid #2d9e6b; color:#1a6b45; pointer-events:none; padding:4px 8px; }
+.ev.preset.alt { background:#FEF3E2; border-left:3px solid #D4881F; color:#7A4D0E; }
+
+.ev.new-a { background:#eeeafd; border-left:3px solid #6c5ce7; color:#3d2fa0; pointer-events:all; padding:14px 8px; cursor:grab; touch-action:none; }
+.ev.new-a.dragging { opacity:0.55; cursor:grabbing; }
+
+.ev.new-b { background:#eeeafd; color:#3d2fa0; pointer-events:all; padding:14px 8px 14px 20px; cursor:default; touch-action:none; border-radius:8px; }
+
+.left-move-handle { position:absolute; left:0; top:0; bottom:0; width:12px; background:#6c5ce7; border-radius:8px 0 0 8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; cursor:grab; touch-action:none; z-index:2; }
+.left-move-handle.dragging { cursor:grabbing; opacity:0.7; }
+.left-move-handle span { display:block; width:3px; height:3px; border-radius:50%; background:rgba(255,255,255,0.65); }
+.left-move-handle:hover span { background:#fff; }
+
+.handle-tb { position:absolute; left:0; right:0; height:14px; display:flex; align-items:center; justify-content:center; cursor:ns-resize; z-index:3; touch-action:none; }
+.handle-tb.top { top:0; } .handle-tb.bot { bottom:0; }
+.handle-tb::after { content:''; display:block; width:22px; height:3px; border-radius:2px; background:#6c5ce7; opacity:0.3; transition:opacity .15s; }
+.ev:hover .handle-tb::after { opacity:0.85; }
+
+.ev .label { font-size:11px; pointer-events:none; user-select:none; line-height:1.6; overflow:hidden; }
+.ev .label strong { font-weight:500; }
+
+.drop-ind { position:absolute; border-radius:8px; border:1.5px dashed #6c5ce7; opacity:0.35; pointer-events:none; background:transparent; display:none; }
+
+.status-bar { margin-top:10px; text-align:center; font-size:11px; color:#aaa; min-height:16px; font-family:'DM Mono',monospace; }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="../index.html">Back to gallery</a>
+  <h1>Timeline Picker</h1>
+  <p class="subtitle">Mobile-safe interaction patterns for scheduling UIs</p>
+  <span class="tag-header">Interaction prototype</span>
+</header>
+
+<div class="card">
+  <div class="card-label">Pattern</div>
+  <div class="tabs">
+    <div class="tab active" onclick="setTab(0)">Drag body to move</div>
+    <div class="tab" onclick="setTab(1)">Left handle to move</div>
+  </div>
+
+  <div id="p0">
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#6c5ce7"></div> Default 1h event</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#2d9e6b"></div> Drag body → move</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#b2acf0"></div> Top / bot → resize</div>
+    </div>
+    <div class="timeline" id="tl0"></div>
+    <div class="status-bar" id="s0">drag to move · handles to resize</div>
+  </div>
+
+  <div id="p1" style="height:0;overflow:hidden;">
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#6c5ce7"></div> Default 1h event</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#4a3db5"></div> Left handle → move</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#b2acf0"></div> Top / bot → resize</div>
+    </div>
+    <div class="timeline" id="tl1"></div>
+    <div class="status-bar" id="s1">left handle to move · top/bot to resize</div>
+  </div>
+</div>
+
+<div class="card" style="max-width:480px;margin:0 auto;">
+  <div class="card-label">Why this pattern</div>
+  <p style="font-size:13px;color:#666;line-height:1.7">
+    Drag-to-create conflicts with scrolling on mobile — the browser can't tell them apart.
+    A default event appears in the first free slot so no creation gesture is needed.
+    <strong>Move</strong> (drag body or left handle) and <strong>resize</strong> (top/bottom handles) are
+    distinct gestures with <code style="font-size:11px;background:#f0ede6;padding:1px 5px;border-radius:4px">touch-action: none</code>
+    on all interactive targets. Overlapping events split into equal columns automatically.
+  </p>
+</div>
+
+<script>
+const HOURS = ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
+const H = 80, OFF = 16, SLOT = H/4, MIN_H = SLOT;
+const COL_START = 48, COL_END_MARGIN = 8;
+
+const PRESET_DEFS = [
+  { label:'Team standup',  start:1, dur:1, alt:false },
+  { label:'1:1 with Alex', start:1, dur:1, alt:true },
+  { label:'Lunch',         start:3, dur:1, alt:false },
+  { label:'Design review', start:5, dur:2, alt:false },
+];
+
+function snapG(v){return Math.round(v/SLOT)*SLOT}
+function snapTop(relY){return Math.max(OFF,snapG(relY-OFF)+OFF)}
+function minsToTime(m){const h=Math.floor(m/60),mm=m%60;return h+':'+(mm===0?'00':String(mm).padStart(2,'0'))}
+function timeLabel(topPx,heightPx){
+  const sm=9*60+Math.round((topPx-OFF)/SLOT)*15;
+  const dm=Math.max(15,Math.round(heightPx/SLOT)*15);
+  const dh=Math.floor(dm/60),dd=dm%60;
+  const ds=dh>0&&dd>0?dh+'h '+dd+'m':dh>0?dh+'h':dd+'m';
+  return '<strong>New event</strong><br>'+minsToTime(sm)+' – '+minsToTime(sm+dm)+'<br><span style="opacity:.5">'+ds+'</span>';
+}
+function setStatus(id,msg){document.getElementById(id).textContent=msg}
+
+function firstFreeSlot(tl){
+  const presets=Array.from(tl.querySelectorAll('.ev.preset'));
+  for(let i=0;i<HOURS.length-1;i++){
+    const sT=OFF+i*H,sB=sT+H;
+    const blocked=presets.some(ev=>{const eT=parseInt(ev.style.top),eB=eT+parseInt(ev.style.height);return sT<eB-1&&sB>eT+1});
+    if(!blocked) return sT;
+  }
+  return OFF;
+}
+
+function getEvTop(el){return parseInt(el.style.top)}
+function getEvH(el){return parseInt(el.style.height)||H}
+function overlaps(a,b){const aT=getEvTop(a),aB=aT+getEvH(a),bT=getEvTop(b),bB=bT+getEvH(b);return aT<bB-1&&aB>bT+1}
+
+function relayout(tl){
+  const events=Array.from(tl.querySelectorAll('.ev:not(.drop-ind)'));
+  const tlW=tl.clientWidth-COL_START-COL_END_MARGIN;
+  if(tlW<=0) return;
+  const groups=[],visited=new Set();
+  events.forEach((ev,i)=>{
+    if(visited.has(i)) return;
+    const group=[i]; visited.add(i);
+    let changed=true;
+    while(changed){changed=false;events.forEach((o,j)=>{if(visited.has(j))return;if(group.some(k=>overlaps(events[k],o))){group.push(j);visited.add(j);changed=true}})}
+    groups.push(group.map(k=>events[k]));
+  });
+  for(const group of groups){
+    group.sort((a,b)=>getEvTop(a)-getEvTop(b));
+    const cols=[],evCols=new Map();
+    for(const ev of group){const t=getEvTop(ev);let p=false;for(let c=0;c<cols.length;c++){if(cols[c]<=t+1){evCols.set(ev,c);cols[c]=t+getEvH(ev);p=true;break}}if(!p){evCols.set(ev,cols.length);cols.push(t+getEvH(ev))}}
+    const tc=cols.length,cw=Math.floor(tlW/tc);
+    for(const ev of group){const c=evCols.get(ev);ev.style.left=(COL_START+c*cw)+'px';ev.style.width=(cw-(c<tc-1?4:0))+'px';ev.style.right='auto'}
+  }
+}
+
+function buildTL(id){
+  const tl=document.getElementById(id),inner=document.createElement('div');
+  inner.className='tl-inner';
+  HOURS.forEach((h,i)=>{
+    const top=OFF+i*H,row=document.createElement('div');
+    row.className='hour-row'; row.style.top=top+'px';
+    row.innerHTML='<div class="hour-label">'+h+'</div><div class="hour-line"></div>';
+    inner.appendChild(row);
+    [1,2,3].forEach(q=>{const ql=document.createElement('div');ql.className='quarter-line';ql.style.top=(top+q*SLOT)+'px';inner.appendChild(ql)});
+  });
+  PRESET_DEFS.forEach(p=>{
+    const pre=document.createElement('div');
+    pre.className='ev preset'+(p.alt?' alt':'');
+    pre.style.cssText='top:'+(OFF+p.start*H)+'px;height:'+(p.dur*H)+'px;left:'+COL_START+'px;right:'+COL_END_MARGIN+'px;';
+    pre.innerHTML='<div class="label"><strong>'+p.label+'</strong><br>'+HOURS[p.start]+' – '+HOURS[p.start+p.dur]+'</div>';
+    inner.appendChild(pre);
+  });
+  tl.appendChild(inner);
+  return tl;
+}
+
+function makeResizeHandles(ev,tl,sid){
+  const s={active:false,dir:null,sY:0,sTop:0,sH:0};
+  ['top','bot'].forEach(dir=>{
+    const h=document.createElement('div');h.className='handle-tb '+dir;ev.appendChild(h);
+    h.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();s.active=true;s.dir=dir;s.sY=e.clientY;s.sTop=getEvTop(ev);s.sH=getEvH(ev);h.setPointerCapture(e.pointerId);tl.style.overflowY='hidden';setStatus(sid,'resizing…')});
+  });
+  ev.addEventListener('pointermove',e=>{
+    if(!s.active)return;const d=e.clientY-s.sY;let nT=s.sTop,nH=s.sH;
+    if(s.dir==='bot'){nH=s.sH+d;if(nH<MIN_H){s.dir='top';nT=Math.max(OFF,snapG(s.sTop+s.sH-MIN_H));nH=MIN_H;s.sY=e.clientY;s.sTop=nT;s.sH=MIN_H}else nH=Math.max(MIN_H,snapG(nH))}
+    else{nT=s.sTop+d;nH=s.sH-d;if(nH<MIN_H){s.dir='bot';nT=Math.max(OFF,snapG(s.sTop+s.sH));nH=MIN_H;s.sY=e.clientY;s.sTop=nT;s.sH=MIN_H}else{nT=Math.max(OFF,snapG(nT-OFF)+OFF);nH=Math.max(MIN_H,s.sTop+s.sH-nT)}}
+    ev.style.top=nT+'px';ev.style.height=nH+'px';ev.querySelector('.label').innerHTML=timeLabel(nT,nH);relayout(tl);
+  });
+  const stop=()=>{if(s.active){relayout(tl);setStatus(sid,'✓ resized')}s.active=false;tl.style.overflowY='scroll'};
+  ev.addEventListener('pointerup',stop);ev.addEventListener('pointercancel',stop);
+}
+
+function attachBodyMove(ev,tl,sid){
+  const di=document.createElement('div');di.className='drop-ind';tl.querySelector('.tl-inner').appendChild(di);
+  let mv=false,sY=0,sTop=0,eH=0,gO=0;
+  ev.addEventListener('pointerdown',e=>{if(e.target.classList.contains('handle-tb'))return;e.stopPropagation();sY=e.clientY;sTop=getEvTop(ev);eH=getEvH(ev);mv=false;const r=tl.getBoundingClientRect();gO=(e.clientY-r.top+tl.scrollTop)-sTop;ev.setPointerCapture(e.pointerId)});
+  ev.addEventListener('pointermove',e=>{if(!ev.hasPointerCapture(e.pointerId))return;if(!mv&&Math.abs(e.clientY-sY)>10){mv=true;tl.style.overflowY='hidden';ev.classList.add('dragging');di.style.height=eH+'px';di.style.left=COL_START+'px';di.style.right=COL_END_MARGIN+'px';di.style.display='block';setStatus(sid,'moving…')}if(mv){const r=tl.getBoundingClientRect(),nT=Math.max(OFF,snapTop((e.clientY-r.top+tl.scrollTop)-gO));di.style.top=nT+'px';ev.style.top=nT+'px';ev.querySelector('.label').innerHTML=timeLabel(nT,eH);relayout(tl)}});
+  const stop=()=>{if(mv){relayout(tl);setStatus(sid,'✓ moved')}mv=false;ev.classList.remove('dragging');di.style.display='none';tl.style.overflowY='scroll'};
+  const cancel=()=>{ev.style.top=sTop+'px';ev.querySelector('.label').innerHTML=timeLabel(sTop,eH);mv=false;ev.classList.remove('dragging');di.style.display='none';tl.style.overflowY='scroll';relayout(tl)};
+  ev.addEventListener('pointerup',stop);ev.addEventListener('pointercancel',cancel);
+}
+
+function attachLeftHandleMove(ev,tl,sid){
+  const di=document.createElement('div');di.className='drop-ind';tl.querySelector('.tl-inner').appendChild(di);
+  const rail=document.createElement('div');rail.className='left-move-handle';
+  [0,1,2].forEach(()=>{const s=document.createElement('span');rail.appendChild(s)});
+  ev.appendChild(rail);
+  let mv=false,sY=0,sTop=0,eH=0,gO=0;
+  rail.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();sY=e.clientY;sTop=getEvTop(ev);eH=getEvH(ev);mv=false;const r=tl.getBoundingClientRect();gO=(e.clientY-r.top+tl.scrollTop)-sTop;rail.setPointerCapture(e.pointerId);tl.style.overflowY='hidden';setStatus(sid,'moving…')});
+  rail.addEventListener('pointermove',e=>{if(!rail.hasPointerCapture(e.pointerId))return;if(!mv&&Math.abs(e.clientY-sY)>4){mv=true;rail.classList.add('dragging');di.style.height=eH+'px';di.style.left=COL_START+'px';di.style.right=COL_END_MARGIN+'px';di.style.display='block'}if(mv){const r=tl.getBoundingClientRect(),nT=Math.max(OFF,snapTop((e.clientY-r.top+tl.scrollTop)-gO));di.style.top=nT+'px';ev.style.top=nT+'px';ev.querySelector('.label').innerHTML=timeLabel(nT,eH);relayout(tl)}});
+  const stop=()=>{if(mv){relayout(tl);setStatus(sid,'✓ moved')}mv=false;rail.classList.remove('dragging');di.style.display='none';tl.style.overflowY='scroll'};
+  const cancel=()=>{ev.style.top=sTop+'px';ev.querySelector('.label').innerHTML=timeLabel(sTop,eH);mv=false;rail.classList.remove('dragging');di.style.display='none';tl.style.overflowY='scroll';relayout(tl)};
+  rail.addEventListener('pointerup',stop);rail.addEventListener('pointercancel',cancel);
+}
+
+function placeDefaultEvent(tl,ver,sid){
+  const topPx=firstFreeSlot(tl),ev=document.createElement('div');
+  ev.className='ev new-'+ver;
+  ev.style.cssText='top:'+topPx+'px;height:'+H+'px;left:'+COL_START+'px;right:'+COL_END_MARGIN+'px;';
+  ev.innerHTML='<div class="label">'+timeLabel(topPx,H)+'</div>';
+  makeResizeHandles(ev,tl,sid);
+  if(ver==='a') attachBodyMove(ev,tl,sid); else attachLeftHandleMove(ev,tl,sid);
+  tl.querySelector('.tl-inner').appendChild(ev);
+  tl._needsRelayout=true; tl._scrollTarget=topPx;
+  if(tl.clientWidth>0){relayout(tl);tl._needsRelayout=false;tl.scrollTo({top:Math.max(0,topPx-40),behavior:'smooth'})}
+}
+
+const tl0=buildTL('tl0'); placeDefaultEvent(tl0,'a','s0');
+const tl1=buildTL('tl1'); placeDefaultEvent(tl1,'b','s1');
+
+function setTab(i){
+  [0,1].forEach(j=>{
+    const p=document.getElementById('p'+j);
+    if(j===i){p.style.height='';p.style.overflow=''}else{p.style.height='0';p.style.overflow='hidden'}
+    document.querySelectorAll('.tab')[j].classList.toggle('active',j===i);
+  });
+  const tl=document.getElementById('tl'+i);
+  if(tl._needsRelayout){requestAnimationFrame(()=>{relayout(tl);tl._needsRelayout=false;tl.scrollTo({top:Math.max(0,tl._scrollTarget-40),behavior:'smooth'})})}
+}
+</script>
+</body>
+</html>

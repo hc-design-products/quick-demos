@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prototype Gallery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --bg:#f5f4f0; --surface:#fff; --border:#e0ddd6; --text:#1a1a1a; --muted:#999; --accent:#6c5ce7; --accent-light:#eeeafd; }
+body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+.site-header { border-bottom:0.5px solid var(--border); background:var(--surface); padding:0 32px; display:flex; align-items:center; justify-content:space-between; height:56px; position:sticky; top:0; z-index:10; }
+.logo { font-size:14px; font-weight:500; letter-spacing:-0.2px; display:flex; align-items:center; gap:8px; }
+.logo-dot { width:8px; height:8px; border-radius:50%; background:var(--accent); }
+.header-meta { font-size:12px; color:var(--muted); font-family:'DM Mono',monospace; }
+.page { max-width:1000px; margin:0 auto; padding:48px 24px 80px; }
+.page-header { margin-bottom:40px; }
+.page-header h1 { font-size:32px; font-weight:300; letter-spacing:-0.5px; margin-bottom:8px; }
+.page-header h1 em { font-style:italic; color:var(--accent); }
+.page-header p { font-size:14px; color:var(--muted); max-width:400px; line-height:1.6; }
+.filter-bar { display:flex; gap:8px; margin-bottom:28px; flex-wrap:wrap; }
+.filter-btn { padding:6px 14px; border:0.5px solid var(--border); border-radius:20px; background:transparent; font-size:12px; font-family:inherit; color:var(--muted); cursor:pointer; transition:all .15s; }
+.filter-btn:hover { border-color:#bbb; color:var(--text); }
+.filter-btn.active { background:var(--text); color:#fff; border-color:var(--text); }
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; }
+.demo-card { background:var(--surface); border:0.5px solid var(--border); border-radius:16px; overflow:hidden; text-decoration:none; color:inherit; display:flex; flex-direction:column; transition:border-color .15s,transform .15s,box-shadow .15s; }
+.demo-card:hover { border-color:#c8c5be; transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,0.06); }
+.card-preview { height:160px; overflow:hidden; position:relative; background:var(--bg); border-bottom:0.5px solid var(--border); display:flex; align-items:center; justify-content:center; }
+.preview-timeline { width:140px; background:#fff; border-radius:8px; border:0.5px solid var(--border); padding:8px 0; box-shadow:0 4px 12px rgba(0,0,0,0.06); }
+.preview-row { display:flex; align-items:center; padding:0 8px; gap:6px; height:18px; }
+.preview-time { width:28px; font-size:9px; color:var(--muted); font-family:'DM Mono',monospace; flex-shrink:0; }
+.preview-line { flex:1; height:0.5px; background:#eee; }
+.preview-event { position:relative; margin:2px 8px 2px 36px; border-radius:4px; padding:3px 5px; }
+.preview-event-text { font-size:7px; font-weight:500; }
+.preview-cols { display:flex; gap:2px; margin:2px 8px 2px 36px; }
+.preview-cols > div { flex:1; border-radius:4px; padding:3px 4px; }
+.card-body { padding:16px; flex:1; display:flex; flex-direction:column; }
+.card-tags { display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
+.tag { font-size:10px; padding:2px 8px; border-radius:20px; background:var(--bg); color:var(--muted); border:0.5px solid var(--border); font-family:'DM Mono',monospace; }
+.tag.interaction { background:var(--accent-light); color:var(--accent); border-color:#c5bcf5; }
+.tag.mobile { background:#e8f5ee; color:#2d7a50; border-color:#b8dfc8; }
+.card-title { font-size:15px; font-weight:500; letter-spacing:-0.2px; margin-bottom:4px; }
+.card-desc { font-size:12px; color:var(--muted); line-height:1.6; flex:1; }
+.card-footer { margin-top:14px; padding-top:12px; border-top:0.5px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.card-date { font-size:11px; color:#ccc; font-family:'DM Mono',monospace; }
+.card-arrow { font-size:16px; color:var(--muted); transition:transform .15s,color .15s; }
+.demo-card:hover .card-arrow { transform:translateX(3px); color:var(--accent); }
+.demo-card.coming-soon { opacity:0.5; pointer-events:none; border-style:dashed; }
+.add-card { border:0.5px dashed #d0cdc6; border-radius:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:40px 20px; color:var(--muted); min-height:220px; }
+.add-icon { width:36px; height:36px; border-radius:50%; border:0.5px dashed #ccc; display:flex; align-items:center; justify-content:center; font-size:20px; color:#ccc; }
+.add-text { font-size:12px; text-align:center; line-height:1.5; }
+footer { border-top:0.5px solid var(--border); padding:20px 32px; display:flex; align-items:center; justify-content:space-between; font-size:11px; color:var(--muted); font-family:'DM Mono',monospace; }
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="logo"><div class="logo-dot"></div>Prototype Gallery</div>
+  <div class="header-meta" id="demo-count">1 demo</div>
+</header>
+<main class="page">
+  <div class="page-header">
+    <h1>Design <em>prototypes</em></h1>
+    <p>Interactive demos for interaction patterns, components, and UX explorations.</p>
+  </div>
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="filterCards('all',this)">All</button>
+    <button class="filter-btn" onclick="filterCards('interaction',this)">Interaction</button>
+    <button class="filter-btn" onclick="filterCards('mobile',this)">Mobile</button>
+  </div>
+  <div class="grid" id="grid">
+    <a class="demo-card" href="demos/timeline.html" data-tags="interaction mobile">
+      <div class="card-preview">
+        <div class="preview-timeline">
+          <div class="preview-row"><span class="preview-time">10:00</span><div class="preview-line"></div></div>
+          <div class="preview-cols">
+            <div style="background:#e8f5ee;border-left:2px solid #2d9e6b;height:32px"><div class="preview-event-text" style="color:#1a6b45">Standup</div></div>
+            <div style="background:#FEF3E2;border-left:2px solid #D4881F;height:32px"><div class="preview-event-text" style="color:#7A4D0E">1:1</div></div>
+            <div style="background:#eeeafd;border-left:2px solid #6c5ce7;height:32px"><div class="preview-event-text" style="color:#3d2fa0">New</div></div>
+          </div>
+          <div class="preview-row"><span class="preview-time">11:00</span><div class="preview-line"></div></div>
+          <div class="preview-row"><span class="preview-time">12:00</span><div class="preview-line"></div></div>
+          <div class="preview-event" style="background:#e8f5ee;border-left:2px solid #2d9e6b;height:24px">
+            <div class="preview-event-text" style="color:#1a6b45">Lunch</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-tags">
+          <span class="tag interaction">interaction</span>
+          <span class="tag mobile">mobile-safe</span>
+        </div>
+        <div class="card-title">Timeline Picker</div>
+        <div class="card-desc">Tap to create, drag to move, handles to resize. Overlapping events split into columns. Solves scroll vs. create conflict on mobile.</div>
+        <div class="card-footer">
+          <span class="card-date">2025-04</span>
+          <span class="card-arrow">→</span>
+        </div>
+      </div>
+    </a>
+    <div class="demo-card coming-soon" data-tags="interaction">
+      <div class="card-preview" style="display:flex;align-items:center;justify-content:center">
+        <div style="width:60px;height:60px;border-radius:50%;border:0.5px dashed #ccc;display:flex;align-items:center;justify-content:center;font-size:20px;color:#ddd">+</div>
+      </div>
+      <div class="card-body">
+        <div class="card-tags"><span class="tag">coming soon</span></div>
+        <div class="card-title">Your next demo</div>
+        <div class="card-desc">Add a new HTML file to /demos and a card here.</div>
+        <div class="card-footer"><span class="card-date">——</span><span class="card-arrow">→</span></div>
+      </div>
+    </div>
+    <div class="add-card">
+      <div class="add-icon">+</div>
+      <div class="add-text">Drop a new <code style="font-size:11px;background:#f0ede6;padding:1px 5px;border-radius:3px">.html</code> in <code style="font-size:11px;background:#f0ede6;padding:1px 5px;border-radius:3px">/demos</code> and add a card above</div>
+    </div>
+  </div>
+</main>
+<footer><span>Prototype Gallery</span><span id="footer-count">1 demo</span></footer>
+<script>
+function filterCards(tag,btn){document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('.demo-card[data-tags]').forEach(c=>{c.style.display=tag==='all'||c.dataset.tags.includes(tag)?'':'none'});}
+const n=document.querySelectorAll('.demo-card:not(.coming-soon)').length;const l=n===1?'1 demo':n+' demos';document.getElementById('demo-count').textContent=l;document.getElementById('footer-count').textContent=l;
+</script>
+</body>
+</html>
