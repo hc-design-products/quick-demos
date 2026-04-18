@@ -45,13 +45,14 @@ h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; 
 
 .ev.new-b { background:#eeeafd; color:#3d2fa0; pointer-events:all; padding:14px 8px 14px 20px; cursor:default; touch-action:none; border-radius:8px; }
 
-.left-move-handle { position:absolute; left:0; top:0; bottom:0; width:12px; background:#6c5ce7; border-radius:8px 0 0 8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; cursor:grab; touch-action:none; z-index:2; }
+.left-move-handle { position:absolute; left:-12px; top:-8px; bottom:-8px; width:36px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; cursor:grab; touch-action:none; z-index:2; }
+.left-move-handle::before { content:''; position:absolute; left:12px; top:8px; bottom:8px; width:12px; background:#6c5ce7; border-radius:8px 0 0 8px; }
 .left-move-handle.dragging { cursor:grabbing; opacity:0.7; }
-.left-move-handle span { display:block; width:3px; height:3px; border-radius:50%; background:rgba(255,255,255,0.65); }
+.left-move-handle span { display:block; width:3px; height:3px; border-radius:50%; background:rgba(255,255,255,0.65); position:relative; z-index:1; left:3px; }
 .left-move-handle:hover span { background:#fff; }
 
-.handle-tb { position:absolute; left:0; right:0; height:14px; display:flex; align-items:center; justify-content:center; cursor:ns-resize; z-index:3; touch-action:none; }
-.handle-tb.top { top:0; } .handle-tb.bot { bottom:0; }
+.handle-tb { position:absolute; left:-8px; right:-8px; height:44px; display:flex; align-items:center; justify-content:center; cursor:ns-resize; z-index:3; touch-action:none; }
+.handle-tb.top { top:-15px; } .handle-tb.bot { bottom:-15px; }
 .handle-tb::after { content:''; display:block; width:22px; height:3px; border-radius:2px; background:#6c5ce7; opacity:0.3; transition:opacity .15s; }
 .ev:hover .handle-tb::after { opacity:0.85; }
 
