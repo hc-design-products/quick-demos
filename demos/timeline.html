@@ -51,8 +51,9 @@ h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; 
 .left-move-handle span { display:block; width:3px; height:3px; border-radius:50%; background:rgba(255,255,255,0.65); position:relative; z-index:1; left:3px; }
 .left-move-handle:hover span { background:#fff; }
 
-.handle-tb { position:absolute; left:-8px; right:-8px; height:44px; display:flex; align-items:center; justify-content:center; cursor:ns-resize; z-index:3; touch-action:none; }
-.handle-tb.top { top:-15px; } .handle-tb.bot { bottom:-15px; }
+.handle-tb { position:absolute; width:44px; height:44px; left:50%; margin-left:-22px; display:flex; align-items:center; justify-content:center; cursor:ns-resize; z-index:3; touch-action:none; }
+.handle-tb.top { top:-15px; }
+.handle-tb.bot { bottom:-15px; }
 .handle-tb::after { content:''; display:block; width:22px; height:3px; border-radius:2px; background:#6c5ce7; opacity:0.3; transition:opacity .15s; }
 .ev:hover .handle-tb::after { opacity:0.85; }
 
@@ -62,6 +63,10 @@ h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; 
 .drop-ind { position:absolute; border-radius:8px; border:1.5px dashed #6c5ce7; opacity:0.35; pointer-events:none; background:transparent; display:none; }
 
 .status-bar { margin-top:10px; text-align:center; font-size:11px; color:#aaa; min-height:16px; font-family:'DM Mono',monospace; }
+
+.dl-link { display:inline-flex; align-items:center; gap:5px; font-size:12px; color:#6c5ce7; text-decoration:none; margin-top:12px; transition:opacity .15s; }
+.dl-link:hover { opacity:0.7; }
+.dl-link::before { content:'↓'; }
 </style>
 </head>
 <body>
@@ -84,20 +89,20 @@ h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; 
     <div class="legend">
       <div class="legend-item"><div class="legend-dot" style="background:#6c5ce7"></div> Default 1h event</div>
       <div class="legend-item"><div class="legend-dot" style="background:#2d9e6b"></div> Drag body → move</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#b2acf0"></div> Top / bot → resize</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#b2acf0"></div> Center handles → resize</div>
     </div>
     <div class="timeline" id="tl0"></div>
-    <div class="status-bar" id="s0">drag to move · handles to resize</div>
+    <div class="status-bar" id="s0">drag body to move · center handles to resize</div>
   </div>
 
   <div id="p1" style="height:0;overflow:hidden;">
     <div class="legend">
       <div class="legend-item"><div class="legend-dot" style="background:#6c5ce7"></div> Default 1h event</div>
       <div class="legend-item"><div class="legend-dot" style="background:#4a3db5"></div> Left handle → move</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#b2acf0"></div> Top / bot → resize</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#b2acf0"></div> Center handles → resize</div>
     </div>
     <div class="timeline" id="tl1"></div>
-    <div class="status-bar" id="s1">left handle to move · top/bot to resize</div>
+    <div class="status-bar" id="s1">left handle to move · center handles to resize</div>
   </div>
 </div>
 
@@ -106,10 +111,11 @@ h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; 
   <p style="font-size:13px;color:#666;line-height:1.7">
     Drag-to-create conflicts with scrolling on mobile — the browser can't tell them apart.
     A default event appears in the first free slot so no creation gesture is needed.
-    <strong>Move</strong> (drag body or left handle) and <strong>resize</strong> (top/bottom handles) are
+    <strong>Move</strong> (drag body or left handle) and <strong>resize</strong> (44×44 center handles) are
     distinct gestures with <code style="font-size:11px;background:#f0ede6;padding:1px 5px;border-radius:4px">touch-action: none</code>
     on all interactive targets. Overlapping events split into equal columns automatically.
   </p>
+  <a class="dl-link" href="timeline.html" download="timeline-picker.html">Download this demo</a>
 </div>
 
 <script>
