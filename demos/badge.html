@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Badge Guideline</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f3; color: #1a1a18; padding: 2rem; }
+  .back { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:#888; text-decoration:none; margin-bottom:16px; transition:color .15s; }
+  .back:hover { color:#1a1a18; }
+  .back::before { content:'←'; }
+  .dl-link { display:inline-flex; align-items:center; gap:5px; font-size:12px; color:#6c5ce7; text-decoration:none; transition:opacity .15s; }
+  .dl-link:hover { opacity:0.7; }
+  .dl-link::before { content:'↓'; }
+  h2 { font-size: 13px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 12px; }
+  .section { margin-bottom: 2.5rem; }
+  .row { display: flex; align-items: center; gap: 20px; margin-bottom: 12px; }
+  input, textarea {
+    font-family: inherit; font-size: 14px; padding: 7px 10px;
+    border: 1px solid #ccc; border-radius: 6px; background: #fff;
+    color: #1a1a18; outline: none; width: 160px;
+  }
+  input:focus, textarea:focus { border-color: #888; }
+  textarea { resize: vertical; font-size: 14px; }
+  .badge-outer {
+    width: 112px; height: 82px;
+    border: 2px solid #333;
+    border-radius: 8px;
+    background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; flex-shrink: 0;
+  }
+  .badge-text {
+    font-family: 'Inter', 'Arial Black', sans-serif;
+    font-weight: 700; font-size: 20px;
+    color: #1a1a18; line-height: 1.2;
+  }
+  pre {
+    background: #ebebea; border-radius: 8px;
+    padding: 12px 14px; font-size: 11.5px;
+    font-family: 'Courier New', monospace;
+    color: #1a1a18; line-height: 1.6;
+    overflow-x: auto;
+  }
+  hr { border: none; border-top: 1px solid #ddd; margin: 2rem 0; }
+</style>
+</head>
+<body>
+<a class="back" href="../index.html">Back to gallery</a>
+
+<div class="section">
+  <h2>Name badge — uniform scale</h2>
+  <div class="row">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <input type="text" id="firstInput" placeholder="First name" value="John" oninput="updateName()"/>
+      <input type="text" id="lastInput"  placeholder="Last name"  value="Smith" oninput="updateName()"/>
+    </div>
+    <div class="badge-outer">
+      <div id="nameInner" style="display:flex;flex-direction:column;align-items:center;gap:4px;transform-origin:center;flex-shrink:0;">
+        <div id="dFirst" class="badge-text" style="white-space:nowrap;"></div>
+        <div id="dLast"  class="badge-text" style="white-space:nowrap;"></div>
+      </div>
+    </div>
+  </div>
+<pre>// 1. Render both rows at base size (no wrap)
+// 2. Measure unscaled dimensions
+// 3. Scale uniformly to fit padded area
+const PAD = 8, AW = W - PAD*2, AH = H - PAD*2;
+
+function fitName(inner) {
+  inner.style.transform = 'scale(1)';
+  requestAnimationFrame(() => {
+    const s = Math.min(AW / inner.offsetWidth,
+                       AH / inner.offsetHeight, 1);
+    inner.style.transform = `scale(${s})`;
+  });
+}</pre>
+</div>
+
+<hr>
+
+<div class="section">
+  <h2>Text badge — shrink font to ≤ 3 rows, then scale</h2>
+  <div class="row">
+    <textarea id="textInput" rows="3" placeholder="Type some text..." oninput="updateText()"></textarea>
+    <div class="badge-outer">
+      <div id="textInner" style="width:96px;transform-origin:center;flex-shrink:0;">
+        <div id="dText" class="badge-text" style="text-align:center;word-break:break-word;"></div>
+      </div>
+    </div>
+  </div>
+<pre>// 1. Binary-search font size until text fits in ≤ 3 rows
+// 2. Safety scale pass to guarantee no overflow
+const LINE_H = 1.2, MAX_ROWS = 3;
+
+function fitText(inner, el) {
+  let lo = 4, hi = 20, best = 4;
+  inner.style.transform = 'scale(1)';
+  for (let i = 0; i &lt; 16; i++) {
+    const mid = (lo + hi) / 2;
+    el.style.fontSize = mid + 'px';
+    if (inner.offsetHeight &lt;= mid * LINE_H * MAX_ROWS + 0.5)
+      { best = mid; lo = mid; } else hi = mid;
+  }
+  el.style.fontSize = best + 'px';
+  requestAnimationFrame(() => {
+    const s = Math.min(AW / inner.offsetWidth,
+                       AH / inner.offsetHeight, 1);
+    inner.style.transform = `scale(${s})`;
+  });
+}</pre>
+</div>
+
+<hr>
+<a class="dl-link" href="badge.html" download="badge-guideline.html">Download this demo</a>
+
+<script>
+const PAD = 8, AW = 112 - PAD*2, AH = 82 - PAD*2, LINE_H = 1.2;
+
+function updateName() {
+  document.getElementById('dFirst').textContent = document.getElementById('firstInput').value.trim() || '\u00A0';
+  document.getElementById('dLast').textContent  = document.getElementById('lastInput').value.trim()  || '\u00A0';
+  const inner = document.getElementById('nameInner');
+  inner.style.transform = 'scale(1)';
+  requestAnimationFrame(() => {
+    const s = Math.min(AW / inner.offsetWidth, AH / inner.offsetHeight, 1);
+    inner.style.transform = `scale(${s})`;
+  });
+}
+
+function updateText() {
+  const el = document.getElementById('dText');
+  el.textContent = document.getElementById('textInput').value || '\u00A0';
+  const inner = document.getElementById('textInner');
+  inner.style.transform = 'scale(1)';
+  let lo = 4, hi = 20, best = 4;
+  for (let i = 0; i < 16; i++) {
+    const mid = (lo + hi) / 2;
+    el.style.fontSize = mid + 'px';
+    if (inner.offsetHeight <= mid * LINE_H * 3 + 0.5) { best = mid; lo = mid; } else hi = mid;
+  }
+  el.style.fontSize = best + 'px';
+  requestAnimationFrame(() => {
+    const s = Math.min(AW / inner.offsetWidth, AH / inner.offsetHeight, 1);
+    inner.style.transform = `scale(${s})`;
+  });
+}
+
+document.fonts.ready.then(() => updateName()).catch(() => updateName());
+</script>
+</body>
+</html>

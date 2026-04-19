@@ -113,7 +113,7 @@ h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; 
     A default event appears in the first free slot so no creation gesture is needed.
     <strong>Move</strong> (drag body or left handle) and <strong>resize</strong> (44×44 center handles) are
     distinct gestures with <code style="font-size:11px;background:#f0ede6;padding:1px 5px;border-radius:4px">touch-action: none</code>
-    on all interactive targets. Overlapping events split into equal columns automatically.
+    on all interactive targets. Overlapping events split into equal columns. Auto-scrolls when dragging near edges.
   </p>
   <a class="dl-link" href="timeline.html" download="timeline-picker.html">Download this demo</a>
 </div>
@@ -122,6 +122,7 @@ h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; 
 const HOURS = ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
 const H = 80, OFF = 16, SLOT = H/4, MIN_H = SLOT;
 const COL_START = 48, COL_END_MARGIN = 8;
+const EDGE_ZONE = 60, MAX_SCROLL_SPEED = 8;
 
 const PRESET_DEFS = [
   { label:'Team standup',  start:1, dur:1, alt:false },
@@ -142,6 +143,19 @@ function timeLabel(topPx,heightPx){
 }
 function setStatus(id,msg){document.getElementById(id).textContent=msg}
 
+function createAutoScroller(tl){
+  let raf=null,speed=0,lastY=0,onScroll=null;
+  function tick(){if(speed===0){raf=null;return}tl.scrollTop+=speed;if(onScroll)onScroll(lastY);raf=requestAnimationFrame(tick)}
+  return{
+    update(cy,cb){lastY=cy;onScroll=cb;const r=tl.getBoundingClientRect(),ft=cy-r.top,fb=r.bottom-cy;
+      if(ft<EDGE_ZONE)speed=-Math.round(MAX_SCROLL_SPEED*(1-ft/EDGE_ZONE));
+      else if(fb<EDGE_ZONE)speed=Math.round(MAX_SCROLL_SPEED*(1-fb/EDGE_ZONE));
+      else speed=0;
+      if(speed!==0&&!raf)raf=requestAnimationFrame(tick)},
+    stop(){speed=0;onScroll=null;if(raf){cancelAnimationFrame(raf);raf=null}}
+  };
+}
+
 function firstFreeSlot(tl){
   const presets=Array.from(tl.querySelectorAll('.ev.preset'));
   for(let i=0;i<HOURS.length-1;i++){
@@ -161,106 +175,65 @@ function relayout(tl){
   const tlW=tl.clientWidth-COL_START-COL_END_MARGIN;
   if(tlW<=0) return;
   const groups=[],visited=new Set();
-  events.forEach((ev,i)=>{
-    if(visited.has(i)) return;
-    const group=[i]; visited.add(i);
-    let changed=true;
-    while(changed){changed=false;events.forEach((o,j)=>{if(visited.has(j))return;if(group.some(k=>overlaps(events[k],o))){group.push(j);visited.add(j);changed=true}})}
-    groups.push(group.map(k=>events[k]));
-  });
-  for(const group of groups){
-    group.sort((a,b)=>getEvTop(a)-getEvTop(b));
-    const cols=[],evCols=new Map();
-    for(const ev of group){const t=getEvTop(ev);let p=false;for(let c=0;c<cols.length;c++){if(cols[c]<=t+1){evCols.set(ev,c);cols[c]=t+getEvH(ev);p=true;break}}if(!p){evCols.set(ev,cols.length);cols.push(t+getEvH(ev))}}
-    const tc=cols.length,cw=Math.floor(tlW/tc);
-    for(const ev of group){const c=evCols.get(ev);ev.style.left=(COL_START+c*cw)+'px';ev.style.width=(cw-(c<tc-1?4:0))+'px';ev.style.right='auto'}
-  }
+  events.forEach((ev,i)=>{if(visited.has(i))return;const group=[i];visited.add(i);let changed=true;while(changed){changed=false;events.forEach((o,j)=>{if(visited.has(j))return;if(group.some(k=>overlaps(events[k],o))){group.push(j);visited.add(j);changed=true}})}groups.push(group.map(k=>events[k]))});
+  for(const group of groups){group.sort((a,b)=>getEvTop(a)-getEvTop(b));const cols=[],evCols=new Map();for(const ev of group){const t=getEvTop(ev);let p=false;for(let c=0;c<cols.length;c++){if(cols[c]<=t+1){evCols.set(ev,c);cols[c]=t+getEvH(ev);p=true;break}}if(!p){evCols.set(ev,cols.length);cols.push(t+getEvH(ev))}}const tc=cols.length,cw=Math.floor(tlW/tc);for(const ev of group){const c=evCols.get(ev);ev.style.left=(COL_START+c*cw)+'px';ev.style.width=(cw-(c<tc-1?4:0))+'px';ev.style.right='auto'}}
 }
 
 function buildTL(id){
-  const tl=document.getElementById(id),inner=document.createElement('div');
-  inner.className='tl-inner';
-  HOURS.forEach((h,i)=>{
-    const top=OFF+i*H,row=document.createElement('div');
-    row.className='hour-row'; row.style.top=top+'px';
-    row.innerHTML='<div class="hour-label">'+h+'</div><div class="hour-line"></div>';
-    inner.appendChild(row);
-    [1,2,3].forEach(q=>{const ql=document.createElement('div');ql.className='quarter-line';ql.style.top=(top+q*SLOT)+'px';inner.appendChild(ql)});
-  });
-  PRESET_DEFS.forEach(p=>{
-    const pre=document.createElement('div');
-    pre.className='ev preset'+(p.alt?' alt':'');
-    pre.style.cssText='top:'+(OFF+p.start*H)+'px;height:'+(p.dur*H)+'px;left:'+COL_START+'px;right:'+COL_END_MARGIN+'px;';
-    pre.innerHTML='<div class="label"><strong>'+p.label+'</strong><br>'+HOURS[p.start]+' – '+HOURS[p.start+p.dur]+'</div>';
-    inner.appendChild(pre);
-  });
-  tl.appendChild(inner);
-  return tl;
+  const tl=document.getElementById(id),inner=document.createElement('div');inner.className='tl-inner';
+  HOURS.forEach((h,i)=>{const top=OFF+i*H,row=document.createElement('div');row.className='hour-row';row.style.top=top+'px';row.innerHTML='<div class="hour-label">'+h+'</div><div class="hour-line"></div>';inner.appendChild(row);[1,2,3].forEach(q=>{const ql=document.createElement('div');ql.className='quarter-line';ql.style.top=(top+q*SLOT)+'px';inner.appendChild(ql)})});
+  PRESET_DEFS.forEach(p=>{const pre=document.createElement('div');pre.className='ev preset'+(p.alt?' alt':'');pre.style.cssText='top:'+(OFF+p.start*H)+'px;height:'+(p.dur*H)+'px;left:'+COL_START+'px;right:'+COL_END_MARGIN+'px;';pre.innerHTML='<div class="label"><strong>'+p.label+'</strong><br>'+HOURS[p.start]+' – '+HOURS[p.start+p.dur]+'</div>';inner.appendChild(pre)});
+  tl.appendChild(inner);return tl;
 }
 
 function makeResizeHandles(ev,tl,sid){
+  const scroller=createAutoScroller(tl);
   const s={active:false,dir:null,sY:0,sTop:0,sH:0};
-  ['top','bot'].forEach(dir=>{
-    const h=document.createElement('div');h.className='handle-tb '+dir;ev.appendChild(h);
-    h.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();s.active=true;s.dir=dir;s.sY=e.clientY;s.sTop=getEvTop(ev);s.sH=getEvH(ev);h.setPointerCapture(e.pointerId);tl.style.overflowY='hidden';setStatus(sid,'resizing…')});
-  });
-  ev.addEventListener('pointermove',e=>{
-    if(!s.active)return;const d=e.clientY-s.sY;let nT=s.sTop,nH=s.sH;
-    if(s.dir==='bot'){nH=s.sH+d;if(nH<MIN_H){s.dir='top';nT=Math.max(OFF,snapG(s.sTop+s.sH-MIN_H));nH=MIN_H;s.sY=e.clientY;s.sTop=nT;s.sH=MIN_H}else nH=Math.max(MIN_H,snapG(nH))}
-    else{nT=s.sTop+d;nH=s.sH-d;if(nH<MIN_H){s.dir='bot';nT=Math.max(OFF,snapG(s.sTop+s.sH));nH=MIN_H;s.sY=e.clientY;s.sTop=nT;s.sH=MIN_H}else{nT=Math.max(OFF,snapG(nT-OFF)+OFF);nH=Math.max(MIN_H,s.sTop+s.sH-nT)}}
-    ev.style.top=nT+'px';ev.style.height=nH+'px';ev.querySelector('.label').innerHTML=timeLabel(nT,nH);relayout(tl);
-  });
-  const stop=()=>{if(s.active){relayout(tl);setStatus(sid,'✓ resized')}s.active=false;tl.style.overflowY='scroll'};
+  ['top','bot'].forEach(dir=>{const h=document.createElement('div');h.className='handle-tb '+dir;ev.appendChild(h);h.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();s.active=true;s.dir=dir;s.sY=e.clientY;s.sTop=getEvTop(ev);s.sH=getEvH(ev);h.setPointerCapture(e.pointerId);tl.style.overflowY='hidden';setStatus(sid,'resizing…')})});
+  function doResize(cy){const d=cy-s.sY;let nT=s.sTop,nH=s.sH;if(s.dir==='bot'){nH=s.sH+d;if(nH<MIN_H){s.dir='top';nT=Math.max(OFF,snapG(s.sTop+s.sH-MIN_H));nH=MIN_H;s.sY=cy;s.sTop=nT;s.sH=MIN_H}else nH=Math.max(MIN_H,snapG(nH))}else{nT=s.sTop+d;nH=s.sH-d;if(nH<MIN_H){s.dir='bot';nT=Math.max(OFF,snapG(s.sTop+s.sH));nH=MIN_H;s.sY=cy;s.sTop=nT;s.sH=MIN_H}else{nT=Math.max(OFF,snapG(nT-OFF)+OFF);nH=Math.max(MIN_H,s.sTop+s.sH-nT)}}ev.style.top=nT+'px';ev.style.height=nH+'px';ev.querySelector('.label').innerHTML=timeLabel(nT,nH);relayout(tl)}
+  ev.addEventListener('pointermove',e=>{if(!s.active)return;doResize(e.clientY);scroller.update(e.clientY,cy=>doResize(cy))});
+  const stop=()=>{if(s.active){scroller.stop();relayout(tl);setStatus(sid,'✓ resized')}s.active=false;tl.style.overflowY='scroll'};
   ev.addEventListener('pointerup',stop);ev.addEventListener('pointercancel',stop);
 }
 
 function attachBodyMove(ev,tl,sid){
+  const scroller=createAutoScroller(tl);
   const di=document.createElement('div');di.className='drop-ind';tl.querySelector('.tl-inner').appendChild(di);
   let mv=false,sY=0,sTop=0,eH=0,gO=0;
   ev.addEventListener('pointerdown',e=>{if(e.target.classList.contains('handle-tb'))return;e.stopPropagation();sY=e.clientY;sTop=getEvTop(ev);eH=getEvH(ev);mv=false;const r=tl.getBoundingClientRect();gO=(e.clientY-r.top+tl.scrollTop)-sTop;ev.setPointerCapture(e.pointerId)});
-  ev.addEventListener('pointermove',e=>{if(!ev.hasPointerCapture(e.pointerId))return;if(!mv&&Math.abs(e.clientY-sY)>10){mv=true;tl.style.overflowY='hidden';ev.classList.add('dragging');di.style.height=eH+'px';di.style.left=COL_START+'px';di.style.right=COL_END_MARGIN+'px';di.style.display='block';setStatus(sid,'moving…')}if(mv){const r=tl.getBoundingClientRect(),nT=Math.max(OFF,snapTop((e.clientY-r.top+tl.scrollTop)-gO));di.style.top=nT+'px';ev.style.top=nT+'px';ev.querySelector('.label').innerHTML=timeLabel(nT,eH);relayout(tl)}});
-  const stop=()=>{if(mv){relayout(tl);setStatus(sid,'✓ moved')}mv=false;ev.classList.remove('dragging');di.style.display='none';tl.style.overflowY='scroll'};
-  const cancel=()=>{ev.style.top=sTop+'px';ev.querySelector('.label').innerHTML=timeLabel(sTop,eH);mv=false;ev.classList.remove('dragging');di.style.display='none';tl.style.overflowY='scroll';relayout(tl)};
+  function doMove(cy){const r=tl.getBoundingClientRect(),nT=Math.max(OFF,snapTop((cy-r.top+tl.scrollTop)-gO));di.style.top=nT+'px';ev.style.top=nT+'px';ev.querySelector('.label').innerHTML=timeLabel(nT,eH);relayout(tl)}
+  ev.addEventListener('pointermove',e=>{if(!ev.hasPointerCapture(e.pointerId))return;if(!mv&&Math.abs(e.clientY-sY)>10){mv=true;tl.style.overflowY='hidden';ev.classList.add('dragging');di.style.height=eH+'px';di.style.left=COL_START+'px';di.style.right=COL_END_MARGIN+'px';di.style.display='block';setStatus(sid,'moving…')}if(mv){doMove(e.clientY);scroller.update(e.clientY,cy=>doMove(cy))}});
+  const stop=()=>{if(mv){scroller.stop();relayout(tl);setStatus(sid,'✓ moved')}mv=false;ev.classList.remove('dragging');di.style.display='none';tl.style.overflowY='scroll'};
+  const cancel=()=>{scroller.stop();ev.style.top=sTop+'px';ev.querySelector('.label').innerHTML=timeLabel(sTop,eH);mv=false;ev.classList.remove('dragging');di.style.display='none';tl.style.overflowY='scroll';relayout(tl)};
   ev.addEventListener('pointerup',stop);ev.addEventListener('pointercancel',cancel);
 }
 
 function attachLeftHandleMove(ev,tl,sid){
+  const scroller=createAutoScroller(tl);
   const di=document.createElement('div');di.className='drop-ind';tl.querySelector('.tl-inner').appendChild(di);
-  const rail=document.createElement('div');rail.className='left-move-handle';
-  [0,1,2].forEach(()=>{const s=document.createElement('span');rail.appendChild(s)});
-  ev.appendChild(rail);
+  const rail=document.createElement('div');rail.className='left-move-handle';[0,1,2].forEach(()=>{const s=document.createElement('span');rail.appendChild(s)});ev.appendChild(rail);
   let mv=false,sY=0,sTop=0,eH=0,gO=0;
   rail.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();sY=e.clientY;sTop=getEvTop(ev);eH=getEvH(ev);mv=false;const r=tl.getBoundingClientRect();gO=(e.clientY-r.top+tl.scrollTop)-sTop;rail.setPointerCapture(e.pointerId);tl.style.overflowY='hidden';setStatus(sid,'moving…')});
-  rail.addEventListener('pointermove',e=>{if(!rail.hasPointerCapture(e.pointerId))return;if(!mv&&Math.abs(e.clientY-sY)>4){mv=true;rail.classList.add('dragging');di.style.height=eH+'px';di.style.left=COL_START+'px';di.style.right=COL_END_MARGIN+'px';di.style.display='block'}if(mv){const r=tl.getBoundingClientRect(),nT=Math.max(OFF,snapTop((e.clientY-r.top+tl.scrollTop)-gO));di.style.top=nT+'px';ev.style.top=nT+'px';ev.querySelector('.label').innerHTML=timeLabel(nT,eH);relayout(tl)}});
-  const stop=()=>{if(mv){relayout(tl);setStatus(sid,'✓ moved')}mv=false;rail.classList.remove('dragging');di.style.display='none';tl.style.overflowY='scroll'};
-  const cancel=()=>{ev.style.top=sTop+'px';ev.querySelector('.label').innerHTML=timeLabel(sTop,eH);mv=false;rail.classList.remove('dragging');di.style.display='none';tl.style.overflowY='scroll';relayout(tl)};
+  function doMove(cy){const r=tl.getBoundingClientRect(),nT=Math.max(OFF,snapTop((cy-r.top+tl.scrollTop)-gO));di.style.top=nT+'px';ev.style.top=nT+'px';ev.querySelector('.label').innerHTML=timeLabel(nT,eH);relayout(tl)}
+  rail.addEventListener('pointermove',e=>{if(!rail.hasPointerCapture(e.pointerId))return;if(!mv&&Math.abs(e.clientY-sY)>4){mv=true;rail.classList.add('dragging');di.style.height=eH+'px';di.style.left=COL_START+'px';di.style.right=COL_END_MARGIN+'px';di.style.display='block'}if(mv){doMove(e.clientY);scroller.update(e.clientY,cy=>doMove(cy))}});
+  const stop=()=>{if(mv){scroller.stop();relayout(tl);setStatus(sid,'✓ moved')}mv=false;rail.classList.remove('dragging');di.style.display='none';tl.style.overflowY='scroll'};
+  const cancel=()=>{scroller.stop();ev.style.top=sTop+'px';ev.querySelector('.label').innerHTML=timeLabel(sTop,eH);mv=false;rail.classList.remove('dragging');di.style.display='none';tl.style.overflowY='scroll';relayout(tl)};
   rail.addEventListener('pointerup',stop);rail.addEventListener('pointercancel',cancel);
 }
 
 function placeDefaultEvent(tl,ver,sid){
   const topPx=firstFreeSlot(tl),ev=document.createElement('div');
-  ev.className='ev new-'+ver;
-  ev.style.cssText='top:'+topPx+'px;height:'+H+'px;left:'+COL_START+'px;right:'+COL_END_MARGIN+'px;';
+  ev.className='ev new-'+ver;ev.style.cssText='top:'+topPx+'px;height:'+H+'px;left:'+COL_START+'px;right:'+COL_END_MARGIN+'px;';
   ev.innerHTML='<div class="label">'+timeLabel(topPx,H)+'</div>';
-  makeResizeHandles(ev,tl,sid);
-  if(ver==='a') attachBodyMove(ev,tl,sid); else attachLeftHandleMove(ev,tl,sid);
-  tl.querySelector('.tl-inner').appendChild(ev);
-  tl._needsRelayout=true; tl._scrollTarget=topPx;
+  makeResizeHandles(ev,tl,sid);if(ver==='a')attachBodyMove(ev,tl,sid);else attachLeftHandleMove(ev,tl,sid);
+  tl.querySelector('.tl-inner').appendChild(ev);tl._needsRelayout=true;tl._scrollTarget=topPx;
   if(tl.clientWidth>0){relayout(tl);tl._needsRelayout=false;tl.scrollTo({top:Math.max(0,topPx-40),behavior:'smooth'})}
 }
 
-const tl0=buildTL('tl0'); placeDefaultEvent(tl0,'a','s0');
-const tl1=buildTL('tl1'); placeDefaultEvent(tl1,'b','s1');
+const tl0=buildTL('tl0');placeDefaultEvent(tl0,'a','s0');
+const tl1=buildTL('tl1');placeDefaultEvent(tl1,'b','s1');
 
-function setTab(i){
-  [0,1].forEach(j=>{
-    const p=document.getElementById('p'+j);
-    if(j===i){p.style.height='';p.style.overflow=''}else{p.style.height='0';p.style.overflow='hidden'}
-    document.querySelectorAll('.tab')[j].classList.toggle('active',j===i);
-  });
-  const tl=document.getElementById('tl'+i);
-  if(tl._needsRelayout){requestAnimationFrame(()=>{relayout(tl);tl._needsRelayout=false;tl.scrollTo({top:Math.max(0,tl._scrollTarget-40),behavior:'smooth'})})}
-}
+function setTab(i){[0,1].forEach(j=>{const p=document.getElementById('p'+j);if(j===i){p.style.height='';p.style.overflow=''}else{p.style.height='0';p.style.overflow='hidden'}document.querySelectorAll('.tab')[j].classList.toggle('active',j===i)});const tl=document.getElementById('tl'+i);if(tl._needsRelayout){requestAnimationFrame(()=>{relayout(tl);tl._needsRelayout=false;tl.scrollTo({top:Math.max(0,tl._scrollTarget-40),behavior:'smooth'})})}}
 </script>
 </body>
 </html>
