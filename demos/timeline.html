@@ -26,9 +26,6 @@ h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; 
 .card { background:#fff; border-radius:16px; padding:20px; border:0.5px solid #e0ddd6; margin-bottom:16px; }
 .card-label { font-size:11px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:#aaa; margin-bottom:12px; }
 
-.legend { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
-.legend-item { display:flex; align-items:center; gap:5px; font-size:11px; color:#999; }
-.legend-dot { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
 
 .timeline { height:400px; overflow-y:scroll; position:relative; border:0.5px solid #e8e6df; border-radius:12px; background:#fafaf8; }
 .tl-inner { position:relative; height:1040px; }
@@ -40,9 +37,13 @@ h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; 
 .ev { position:absolute; border-radius:8px; overflow:visible; font-size:11px; }
 .ev.preset { background:#e8f5ee; border-left:3px solid #2d9e6b; color:#1a6b45; pointer-events:none; padding:4px 8px; }
 .ev.preset.alt { background:#FEF3E2; border-left:3px solid #D4881F; color:#7A4D0E; }
-.ev.new-a { background:#eeeafd; border-left:3px solid #6c5ce7; color:#3d2fa0; pointer-events:all; padding:14px 8px; cursor:grab; touch-action:none; }
+.ev.new-a { background:#eeeafd; border-left:3px solid #6c5ce7; color:#3d2fa0; pointer-events:all; padding:14px 8px; cursor:grab; touch-action:none; transition:background .15s,border-color .15s; }
 .ev.new-a.dragging { opacity:0.55; cursor:grabbing; }
-.ev.new-b { background:#eeeafd; color:#3d2fa0; pointer-events:all; padding:14px 8px 14px 20px; cursor:default; touch-action:none; border-radius:8px; }
+.ev.new-a.overlap { background:rgba(226,79,75,0.3); border-left-color:#e24f4b; }
+.ev.new-b { background:#eeeafd; color:#3d2fa0; pointer-events:all; padding:14px 8px 14px 20px; cursor:default; touch-action:none; border-radius:8px; transition:background .15s,border-color .15s; }
+.ev.new-b.overlap { background:rgba(226,79,75,0.3); }
+.ev.new-b.overlap .left-move-handle::before { background:#e24f4b; }
+.ev.overlap .handle-tb::after { background:#e24f4b; }
 
 .left-move-handle { position:absolute; left:-12px; top:-8px; bottom:-8px; width:36px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; cursor:grab; touch-action:none; z-index:2; }
 .left-move-handle::before { content:''; position:absolute; left:12px; top:8px; bottom:8px; width:12px; background:#6c5ce7; border-radius:8px 0 0 8px; }
@@ -120,11 +121,6 @@ h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; 
   <div>
     <div class="card">
       <div class="card-label">Demo</div>
-      <div class="legend">
-        <div class="legend-item"><div class="legend-dot" style="background:#6c5ce7"></div> Default 1h event</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#2d9e6b"></div> Drag body → move</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#b2acf0"></div> Center handles → resize</div>
-      </div>
       <div class="timeline" id="tl-sa"></div>
       <div class="status-bar" id="s-sa">drag body to move · center handles to resize</div>
     </div>
@@ -162,6 +158,23 @@ h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; 
         <line x1="258" y1="72" x2="290" y2="96" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/>
         <text style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;fill:#0F6E56" x="296" y="92">Move zone</text><text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="296" y="106">Entire body (excl. handles)</text>
         <text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="10" y="192">Mobile-Selector · bg: teal/300 · border-left: primary/main · padding: 8px · radius: 4px</text>
+      </svg></div>
+    </div>
+    <div class="spec-card">
+      <div class="spec-label">Error state — overlap</div>
+      <div class="spec-diagram"><svg width="100%" viewBox="0 0 520 200">
+        <rect x="10" y="34" width="248" height="76" rx="4" fill="rgba(226,79,75,0.3)" stroke="#e24f4b" stroke-width="1"/><rect x="10" y="34" width="4" height="76" fill="#e24f4b"/>
+        <text style="font-family:Inter,sans-serif;font-size:11px;fill:#1c1c1c" x="22" y="58">09:00 ~ 10:00</text><text style="font-family:Inter,sans-serif;font-size:11px;fill:#1c1c1c" x="22" y="74">1h</text>
+        <rect x="112" y="17" width="44" height="44" rx="4" fill="none" stroke="#e24f4b" stroke-width="1.5" stroke-dasharray="4 3"/><line x1="123" y1="39" x2="145" y2="39" stroke="#e24f4b" stroke-width="2.5" stroke-linecap="round"/>
+        <rect x="112" y="83" width="44" height="44" rx="4" fill="none" stroke="#e24f4b" stroke-width="1.5" stroke-dasharray="4 3"/><line x1="123" y1="105" x2="145" y2="105" stroke="#e24f4b" stroke-width="2.5" stroke-linecap="round"/>
+        <rect x="16" y="48" width="236" height="48" rx="2" fill="none" stroke="#b33" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <line x1="258" y1="39" x2="290" y2="39" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/>
+        <text style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;fill:#e24f4b" x="296" y="35">Handles turn red</text><text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="296" y="49">Line color: #e24f4b</text>
+        <line x1="258" y1="72" x2="290" y2="96" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/>
+        <text style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;fill:#b33" x="296" y="92">Error background</text><text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="296" y="106">rgba(226,79,75,0.3)</text>
+        <line x1="10" y1="130" x2="10" y2="148" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/>
+        <text style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;fill:#e24f4b" x="18" y="144">Border-left: #e24f4b</text><text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="18" y="158">Replaces primary/main</text>
+        <text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="10" y="192">Triggered when editable event overlaps any existing event · token: error/_states/focusvisible</text>
       </svg></div>
     </div>
     <div class="spec-card">
@@ -208,8 +221,8 @@ h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; 
         <div class="rule-item"><div class="rule-num">2</div><div>Drag event body to move. Requires 10px pointer travel before activating (prevents accidental drags). <span class="tag-p tag-must">must</span></div></div>
         <div class="rule-item"><div class="rule-num">3</div><div>Two center handles (top/bottom) to resize. Each handle uses <span class="code-i">setPointerCapture</span> on <span class="code-i">pointerdown</span>. <span class="tag-p tag-must">must</span></div></div>
         <div class="rule-item"><div class="rule-num">4</div><div>Snap all edges to 15-min grid. Minimum duration: 15m. <span class="tag-p tag-must">must</span></div></div>
-        <div class="rule-item"><div class="rule-num">5</div><div>Move collision: if the event fits, push to the nearer free side. If the gap is smaller than the event, shrink it to fit the gap. <span class="tag-p tag-must">must</span></div></div>
-        <div class="rule-item"><div class="rule-num">6</div><div>Resize collision: edge stops at the nearest existing event boundary. No handle-flip — opposite edge stays anchored. <span class="tag-p tag-must">must</span></div></div>
+        <div class="rule-item"><div class="rule-num">5</div><div>Overlap warning: when the editable event overlaps an existing event, switch to error state (<span class="code-i">error/focusvisible</span> background, red border-left and handles). <span class="tag-p tag-must">must</span></div></div>
+        <div class="rule-item"><div class="rule-num">6</div><div>Handle reversal: when a resize handle is dragged past the opposite edge, swap which end is being resized. <span class="tag-p tag-must">must</span></div></div>
         <div class="rule-item"><div class="rule-num">7</div><div>Auto-scroll timeline when pointer is within 60px of top/bottom edge. <span class="tag-p tag-should">should</span></div></div>
       </div>
       <div class="spec-divider"></div>
@@ -230,11 +243,6 @@ h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; 
   <div>
     <div class="card">
       <div class="card-label">Demo</div>
-      <div class="legend">
-        <div class="legend-item"><div class="legend-dot" style="background:#6c5ce7"></div> Default 1h event</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#4a3db5"></div> Left rail → move</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#b2acf0"></div> Center handles → resize</div>
-      </div>
       <div class="timeline" id="tl-sb"></div>
       <div class="status-bar" id="s-sb">left handle to move · center handles to resize</div>
     </div>
@@ -275,6 +283,23 @@ h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; 
         <line x1="258" y1="72" x2="290" y2="100" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/>
         <text style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;fill:#888" x="296" y="96">Body (no action)</text><text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="296" y="110">Content display only</text>
         <text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="10" y="192">Mobile-Selector · bg: teal/300 · border: primary/main · padding: 8px · radius: 4px</text>
+      </svg></div>
+    </div>
+    <div class="spec-card">
+      <div class="spec-label">Error state — overlap</div>
+      <div class="spec-diagram"><svg width="100%" viewBox="0 0 520 200">
+        <rect x="24" y="34" width="234" height="76" rx="0 4 4 0" fill="rgba(226,79,75,0.3)" stroke="#e24f4b" stroke-width="1"/><rect x="10" y="34" width="14" height="76" rx="4 0 0 4" fill="#e24f4b"/>
+        <circle cx="17" cy="66" r="2" fill="rgba(255,255,255,0.7)"/><circle cx="17" cy="74" r="2" fill="rgba(255,255,255,0.7)"/><circle cx="17" cy="82" r="2" fill="rgba(255,255,255,0.7)"/>
+        <text style="font-family:Inter,sans-serif;font-size:11px;fill:#1c1c1c" x="34" y="58">09:00 ~ 10:00</text><text style="font-family:Inter,sans-serif;font-size:11px;fill:#1c1c1c" x="34" y="74">1h</text>
+        <rect x="119" y="17" width="44" height="44" rx="4" fill="none" stroke="#e24f4b" stroke-width="1.5" stroke-dasharray="4 3"/><line x1="130" y1="39" x2="152" y2="39" stroke="#e24f4b" stroke-width="2.5" stroke-linecap="round"/>
+        <rect x="119" y="83" width="44" height="44" rx="4" fill="none" stroke="#e24f4b" stroke-width="1.5" stroke-dasharray="4 3"/><line x1="130" y1="105" x2="152" y2="105" stroke="#e24f4b" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="258" y1="39" x2="290" y2="39" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/>
+        <text style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;fill:#e24f4b" x="296" y="35">Handles turn red</text><text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="296" y="49">Line color: #e24f4b</text>
+        <line x1="258" y1="72" x2="290" y2="96" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/>
+        <text style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;fill:#b33" x="296" y="92">Error background</text><text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="296" y="106">rgba(226,79,75,0.3)</text>
+        <line x1="10" y1="130" x2="10" y2="148" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/>
+        <text style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;fill:#e24f4b" x="18" y="144">Left rail: #e24f4b</text><text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="18" y="158">Replaces primary/main</text>
+        <text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="10" y="192">Triggered when editable event overlaps any existing event · token: error/_states/focusvisible</text>
       </svg></div>
     </div>
     <div class="spec-card">
@@ -324,8 +349,8 @@ h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; 
         <div class="rule-item"><div class="rule-num">2</div><div>Left rail (14px visible, 36px touch target) is the only move handle. Event body has no gesture. <span class="tag-p tag-must">must</span></div></div>
         <div class="rule-item"><div class="rule-num">3</div><div>Two center handles (top/bottom) to resize. Each handle uses <span class="code-i">setPointerCapture</span> on <span class="code-i">pointerdown</span>. <span class="tag-p tag-must">must</span></div></div>
         <div class="rule-item"><div class="rule-num">4</div><div>Snap all edges to 15-min grid. Minimum duration: 15m. <span class="tag-p tag-must">must</span></div></div>
-        <div class="rule-item"><div class="rule-num">5</div><div>Move collision: if the event fits, push to the nearer free side. If the gap is smaller than the event, shrink it to fit the gap. <span class="tag-p tag-must">must</span></div></div>
-        <div class="rule-item"><div class="rule-num">6</div><div>Resize collision: edge stops at the nearest existing event boundary. No handle-flip — opposite edge stays anchored. <span class="tag-p tag-must">must</span></div></div>
+        <div class="rule-item"><div class="rule-num">5</div><div>Overlap warning: when the editable event overlaps an existing event, switch to error state (<span class="code-i">error/focusvisible</span> background, red border-left and handles). <span class="tag-p tag-must">must</span></div></div>
+        <div class="rule-item"><div class="rule-num">6</div><div>Handle reversal: when a resize handle is dragged past the opposite edge, swap which end is being resized. <span class="tag-p tag-must">must</span></div></div>
         <div class="rule-item"><div class="rule-num">7</div><div>Auto-scroll timeline when pointer is within 60px of top/bottom edge. <span class="tag-p tag-should">should</span></div></div>
       </div>
       <div class="spec-divider"></div>
@@ -346,11 +371,6 @@ h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; 
   <div>
     <div class="card">
       <div class="card-label">Demo</div>
-      <div class="legend">
-        <div class="legend-item"><div class="legend-dot" style="background:#6c5ce7"></div> Default 1h event</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#2d9e6b"></div> Drag body → move</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#b2acf0"></div> Center handles → resize</div>
-      </div>
       <div class="timeline" id="tl-ma"></div>
       <div class="status-bar" id="s-ma">drag body to move · center handles to resize</div>
     </div>
@@ -444,11 +464,6 @@ h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; 
   <div>
     <div class="card">
       <div class="card-label">Demo</div>
-      <div class="legend">
-        <div class="legend-item"><div class="legend-dot" style="background:#6c5ce7"></div> Default 1h event</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#4a3db5"></div> Left rail → move</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#b2acf0"></div> Center handles → resize</div>
-      </div>
       <div class="timeline" id="tl-mb"></div>
       <div class="status-bar" id="s-mb">left handle to move · center handles to resize</div>
     </div>
@@ -642,6 +657,19 @@ function clampMove(ranges, nT, nH){
   return{top:fitT,height:fitH};
 }
 
+// ── overlap warning (single tabs) ──────────────────────────────────────
+// Toggle .overlap class on the editable event when it collides with any preset
+function updateOverlapState(ev,tl){
+  var eT=getEvTop(ev),eB=eT+getEvH(ev);
+  var presets=tl.querySelectorAll('.ev.preset');
+  var hit=false;
+  for(var i=0;i<presets.length;i++){
+    var pT=getEvTop(presets[i]),pB=pT+getEvH(presets[i]);
+    if(eT<pB-1&&eB>pT+1){hit=true;break;}
+  }
+  if(hit) ev.classList.add('overlap'); else ev.classList.remove('overlap');
+}
+
 // ── overlap layout ─────────────────────────────────────────────────────
 function overlaps(a,b){var aT=getEvTop(a),aB=aT+getEvH(a),bT=getEvTop(b),bB=bT+getEvH(b);return aT<bB-1&&aB>bT+1}
 function relayout(tl){
@@ -688,7 +716,7 @@ function buildTL(id,presetDefs){
 }
 
 // ── resize handles ─────────────────────────────────────────────────────
-function makeResizeHandles(ev,tl,sid,doRelayout,blockPresets){
+function makeResizeHandles(ev,tl,sid,doRelayout,blockPresets,warnOverlap){
   var scroller=createAutoScroller(tl);
   var s={active:false,dir:null,sY:0,sTop:0,sH:0,anchor:0};
   ['top','bot'].forEach(function(dir){
@@ -746,6 +774,7 @@ function makeResizeHandles(ev,tl,sid,doRelayout,blockPresets){
       else{nT=s.sTop+d;nH=s.sH-d;if(nH<MIN_H){s.dir='bot';nT=Math.max(OFF,snapG(s.sTop+s.sH));nH=MIN_H;s.sY=cy;s.sTop=nT;s.sH=MIN_H}else{nT=Math.max(OFF,snapG(nT-OFF)+OFF);nH=Math.max(MIN_H,s.sTop+s.sH-nT)}}
     }
     ev.style.top=nT+'px';ev.style.height=nH+'px';ev.querySelector('.label').innerHTML=timeLabel(nT,nH);
+    if(warnOverlap)updateOverlapState(ev,tl);
     if(doRelayout)relayout(tl);
   }
   ev.addEventListener('pointermove',function(e){if(!s.active)return;doResize(e.clientY);scroller.update(e.clientY,function(cy){doResize(cy)})});
@@ -754,7 +783,7 @@ function makeResizeHandles(ev,tl,sid,doRelayout,blockPresets){
 }
 
 // ── body-move ──────────────────────────────────────────────────────────
-function attachBodyMove(ev,tl,sid,doRelayout,blockPresets){
+function attachBodyMove(ev,tl,sid,doRelayout,blockPresets,warnOverlap){
   var scroller=createAutoScroller(tl);
   var di=document.createElement('div');di.className='drop-ind';tl.querySelector('.tl-inner').appendChild(di);
   var mv=false,sY=0,sTop=0,eH=0,gO=0;
@@ -762,7 +791,9 @@ function attachBodyMove(ev,tl,sid,doRelayout,blockPresets){
   function doMove(cy){
     var r=tl.getBoundingClientRect(),nT=Math.max(OFF,snapTop((cy-r.top+tl.scrollTop)-gO));
     if(blockPresets){var c=clampMove(presetRanges(tl),nT,eH);nT=c.top;eH=c.height;ev.style.height=eH+'px';di.style.height=eH+'px';}
-    di.style.top=nT+'px';ev.style.top=nT+'px';ev.querySelector('.label').innerHTML=timeLabel(nT,eH);if(doRelayout)relayout(tl)
+    di.style.top=nT+'px';ev.style.top=nT+'px';ev.querySelector('.label').innerHTML=timeLabel(nT,eH);
+    if(warnOverlap)updateOverlapState(ev,tl);
+    if(doRelayout)relayout(tl)
   }
   ev.addEventListener('pointermove',function(e){if(!ev.hasPointerCapture(e.pointerId))return;if(!mv&&Math.abs(e.clientY-sY)>10){mv=true;tl.style.overflowY='hidden';ev.classList.add('dragging');di.style.height=eH+'px';di.style.left=COL_START+'px';di.style.right=COL_END_MARGIN+'px';di.style.display='block';setStatus(sid,'moving\u2026')}if(mv){doMove(e.clientY);scroller.update(e.clientY,function(cy){doMove(cy)})}});
   var stop=function(){if(mv){scroller.stop();if(doRelayout)relayout(tl);setStatus(sid,'\u2713 moved')}mv=false;ev.classList.remove('dragging');di.style.display='none';tl.style.overflowY='scroll'};
@@ -771,7 +802,7 @@ function attachBodyMove(ev,tl,sid,doRelayout,blockPresets){
 }
 
 // ── left-handle move ───────────────────────────────────────────────────
-function attachLeftHandleMove(ev,tl,sid,doRelayout,blockPresets){
+function attachLeftHandleMove(ev,tl,sid,doRelayout,blockPresets,warnOverlap){
   var scroller=createAutoScroller(tl);
   var di=document.createElement('div');di.className='drop-ind';tl.querySelector('.tl-inner').appendChild(di);
   var rail=document.createElement('div');rail.className='left-move-handle';
@@ -782,7 +813,9 @@ function attachLeftHandleMove(ev,tl,sid,doRelayout,blockPresets){
   function doMove(cy){
     var r=tl.getBoundingClientRect(),nT=Math.max(OFF,snapTop((cy-r.top+tl.scrollTop)-gO));
     if(blockPresets){var c=clampMove(presetRanges(tl),nT,eH);nT=c.top;eH=c.height;ev.style.height=eH+'px';di.style.height=eH+'px';}
-    di.style.top=nT+'px';ev.style.top=nT+'px';ev.querySelector('.label').innerHTML=timeLabel(nT,eH);if(doRelayout)relayout(tl)
+    di.style.top=nT+'px';ev.style.top=nT+'px';ev.querySelector('.label').innerHTML=timeLabel(nT,eH);
+    if(warnOverlap)updateOverlapState(ev,tl);
+    if(doRelayout)relayout(tl)
   }
   rail.addEventListener('pointermove',function(e){if(!rail.hasPointerCapture(e.pointerId))return;if(!mv&&Math.abs(e.clientY-sY)>4){mv=true;rail.classList.add('dragging');di.style.height=eH+'px';di.style.left=COL_START+'px';di.style.right=COL_END_MARGIN+'px';di.style.display='block'}if(mv){doMove(e.clientY);scroller.update(e.clientY,function(cy){doMove(cy)})}});
   var stop=function(){if(mv){scroller.stop();if(doRelayout)relayout(tl);setStatus(sid,'\u2713 moved')}mv=false;rail.classList.remove('dragging');di.style.display='none';tl.style.overflowY='scroll'};
@@ -791,28 +824,29 @@ function attachLeftHandleMove(ev,tl,sid,doRelayout,blockPresets){
 }
 
 // ── place editable event ───────────────────────────────────────────────
-function placeEvent(tl,moveMode,sid,doRelayout,blockPresets){
+function placeEvent(tl,moveMode,sid,doRelayout,blockPresets,warnOverlap){
   var topPx=firstFreeSlot(tl);
   var ev=document.createElement('div');
   ev.className='ev '+(moveMode==='a'?'new-a':'new-b');
   ev.style.cssText='top:'+topPx+'px;height:'+H+'px;left:'+COL_START+'px;right:'+COL_END_MARGIN+'px;';
   ev.innerHTML='<div class="label">'+timeLabel(topPx,H)+'</div>';
-  makeResizeHandles(ev,tl,sid,doRelayout,blockPresets);
-  if(moveMode==='a') attachBodyMove(ev,tl,sid,doRelayout,blockPresets);
-  else               attachLeftHandleMove(ev,tl,sid,doRelayout,blockPresets);
+  makeResizeHandles(ev,tl,sid,doRelayout,blockPresets,warnOverlap);
+  if(moveMode==='a') attachBodyMove(ev,tl,sid,doRelayout,blockPresets,warnOverlap);
+  else               attachLeftHandleMove(ev,tl,sid,doRelayout,blockPresets,warnOverlap);
   tl.querySelector('.tl-inner').appendChild(ev);
   requestAnimationFrame(function(){
     if(doRelayout)relayout(tl);
+    if(warnOverlap)updateOverlapState(ev,tl);
     tl.scrollTo({top:Math.max(0,topPx-40),behavior:'smooth'});
   });
 }
 
 // ── initialise all four timelines ──────────────────────────────────────
 (function(){
-  placeEvent(buildTL('tl-sa',SINGLE_PRESETS),'a','s-sa',false,true);
-  placeEvent(buildTL('tl-sb',SINGLE_PRESETS),'b','s-sb',false,true);
-  placeEvent(buildTL('tl-ma',MULTI_PRESETS), 'a','s-ma',true, false);
-  placeEvent(buildTL('tl-mb',MULTI_PRESETS), 'b','s-mb',true, false);
+  placeEvent(buildTL('tl-sa',SINGLE_PRESETS),'a','s-sa',false,false,true);
+  placeEvent(buildTL('tl-sb',SINGLE_PRESETS),'b','s-sb',false,false,true);
+  placeEvent(buildTL('tl-ma',MULTI_PRESETS), 'a','s-ma',true, false,false);
+  placeEvent(buildTL('tl-mb',MULTI_PRESETS), 'b','s-mb',true, false,false);
 })();
 
 // ── tab switcher ───────────────────────────────────────────────────────
