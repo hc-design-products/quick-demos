@@ -100,81 +100,25 @@ footer { border-top:0.5px solid var(--border); padding:20px 32px; display:flex; 
       </div>
     </a>
 
-    <!-- Demo 2: Single Row, Body Move -->
-    <a class="demo-card" href="demos/timeline-single-body-move.html" data-tags="interaction mobile">
+    <!-- Timeline Picker (all 4 variants combined) -->
+    <a class="demo-card" href="demos/timeline.html" data-tags="interaction mobile">
       <div class="card-preview">
         <div class="preview-timeline">
           <div class="preview-row"><span class="preview-time">09:00</span><div class="preview-line"></div></div>
-          <div class="preview-event" style="background:#eeeafd;border-left:2px solid #6c5ce7;height:32px"><div class="preview-event-text" style="color:#3d2fa0">New event</div></div>
-          <div class="preview-row"><span class="preview-time">10:00</span><div class="preview-line"></div></div>
-          <div class="preview-row"><span class="preview-time">11:00</span><div class="preview-line"></div></div>
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="card-tags"><span class="tag interaction">interaction</span><span class="tag mobile">mobile-safe</span></div>
-        <div class="card-title">Single row — body move</div>
-        <div class="card-desc">One event, no columns. Drag body to move, center handles to resize.</div>
-        <div class="card-footer"><span class="card-date">2025-04</span><span style="display:flex;align-items:center;gap:8px"><span onclick="event.preventDefault();event.stopPropagation();var a=document.createElement('a');a.href='demos/timeline-single-body-move.html';a.download='timeline-single-body-move.html';document.body.appendChild(a);a.click();a.remove();" style="font-size:11px;color:#6c5ce7;cursor:pointer">↓ .html</span><span class="card-arrow">→</span></span></div>
-      </div>
-    </a>
-
-    <!-- Demo 3: Single Row, Left Handle -->
-    <a class="demo-card" href="demos/timeline-single-left-handle.html" data-tags="interaction mobile">
-      <div class="card-preview">
-        <div class="preview-timeline">
-          <div class="preview-row"><span class="preview-time">09:00</span><div class="preview-line"></div></div>
-          <div style="margin:2px 8px 2px 36px;display:flex"><div style="width:4px;height:32px;background:#6c5ce7;border-radius:4px 0 0 4px"></div><div style="background:#eeeafd;height:32px;flex:1;border-radius:0 4px 4px 0;padding:3px 4px"><div class="preview-event-text" style="color:#3d2fa0">New event</div></div></div>
-          <div class="preview-row"><span class="preview-time">10:00</span><div class="preview-line"></div></div>
-          <div class="preview-row"><span class="preview-time">11:00</span><div class="preview-line"></div></div>
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="card-tags"><span class="tag interaction">interaction</span><span class="tag mobile">mobile-safe</span></div>
-        <div class="card-title">Single row — left handle</div>
-        <div class="card-desc">One event, no columns. Left rail to move, center handles to resize.</div>
-        <div class="card-footer"><span class="card-date">2025-04</span><span style="display:flex;align-items:center;gap:8px"><span onclick="event.preventDefault();event.stopPropagation();var a=document.createElement('a');a.href='demos/timeline-single-left-handle.html';a.download='timeline-single-left-handle.html';document.body.appendChild(a);a.click();a.remove();" style="font-size:11px;color:#6c5ce7;cursor:pointer">↓ .html</span><span class="card-arrow">→</span></span></div>
-      </div>
-    </a>
-
-    <!-- Demo 4: Multi Row, Body Move -->
-    <a class="demo-card" href="demos/timeline-multi-body-move.html" data-tags="interaction mobile">
-      <div class="card-preview">
-        <div class="preview-timeline">
+          <div class="preview-event" style="background:#e8f5ee;border-left:2px solid #2d9e6b;height:18px;margin-left:36px;margin-right:8px;margin-bottom:2px"><div class="preview-event-text" style="color:#1a6b45">Standup</div></div>
           <div class="preview-row"><span class="preview-time">10:00</span><div class="preview-line"></div></div>
           <div class="preview-cols">
-            <div style="background:#e8f5ee;border-left:2px solid #2d9e6b;height:32px"><div class="preview-event-text" style="color:#1a6b45">Standup</div></div>
-            <div style="background:#FEF3E2;border-left:2px solid #D4881F;height:32px"><div class="preview-event-text" style="color:#7A4D0E">1:1</div></div>
-            <div style="background:#eeeafd;border-left:2px solid #6c5ce7;height:32px"><div class="preview-event-text" style="color:#3d2fa0">New</div></div>
+            <div style="background:#FEF3E2;border-left:2px solid #D4881F;height:28px"><div class="preview-event-text" style="color:#7A4D0E">1:1</div></div>
+            <div style="background:#eeeafd;border-left:2px solid #6c5ce7;height:28px"><div class="preview-event-text" style="color:#3d2fa0">New</div></div>
           </div>
           <div class="preview-row"><span class="preview-time">11:00</span><div class="preview-line"></div></div>
         </div>
       </div>
       <div class="card-body">
         <div class="card-tags"><span class="tag interaction">interaction</span><span class="tag mobile">mobile-safe</span></div>
-        <div class="card-title">Multi row — body move</div>
-        <div class="card-desc">Overlap columns, preset events. Drag body to move, center handles to resize.</div>
-        <div class="card-footer"><span class="card-date">2025-04</span><span style="display:flex;align-items:center;gap:8px"><span onclick="event.preventDefault();event.stopPropagation();var a=document.createElement('a');a.href='demos/timeline-multi-body-move.html';a.download='timeline-multi-body-move.html';document.body.appendChild(a);a.click();a.remove();" style="font-size:11px;color:#6c5ce7;cursor:pointer">↓ .html</span><span class="card-arrow">→</span></span></div>
-      </div>
-    </a>
-
-    <!-- Demo 5: Multi Row, Left Handle -->
-    <a class="demo-card" href="demos/timeline-multi-left-handle.html" data-tags="interaction mobile">
-      <div class="card-preview">
-        <div class="preview-timeline">
-          <div class="preview-row"><span class="preview-time">10:00</span><div class="preview-line"></div></div>
-          <div class="preview-cols">
-            <div style="display:flex"><div style="width:3px;background:#6c5ce7;border-radius:3px 0 0 3px"></div><div style="background:#eeeafd;flex:1;height:32px;border-radius:0 4px 4px 0;padding:3px 3px"><div class="preview-event-text" style="color:#3d2fa0">New</div></div></div>
-            <div style="background:#e8f5ee;border-left:2px solid #2d9e6b;height:32px"><div class="preview-event-text" style="color:#1a6b45">Standup</div></div>
-            <div style="background:#FEF3E2;border-left:2px solid #D4881F;height:32px"><div class="preview-event-text" style="color:#7A4D0E">1:1</div></div>
-          </div>
-          <div class="preview-row"><span class="preview-time">11:00</span><div class="preview-line"></div></div>
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="card-tags"><span class="tag interaction">interaction</span><span class="tag mobile">mobile-safe</span></div>
-        <div class="card-title">Multi row — left handle</div>
-        <div class="card-desc">Overlap columns, preset events. Left rail to move, center handles to resize.</div>
-        <div class="card-footer"><span class="card-date">2025-04</span><span style="display:flex;align-items:center;gap:8px"><span onclick="event.preventDefault();event.stopPropagation();var a=document.createElement('a');a.href='demos/timeline-multi-left-handle.html';a.download='timeline-multi-left-handle.html';document.body.appendChild(a);a.click();a.remove();" style="font-size:11px;color:#6c5ce7;cursor:pointer">↓ .html</span><span class="card-arrow">→</span></span></div>
+        <div class="card-title">Timeline Picker</div>
+        <div class="card-desc">Four variants in one tabbed view — single &amp; multi row, body move &amp; left-handle. Preset events, overlap columns, snap-to-grid.</div>
+        <div class="card-footer"><span class="card-date">2025-04</span><span style="display:flex;align-items:center;gap:8px"><span onclick="event.preventDefault();event.stopPropagation();var a=document.createElement('a');a.href='demos/timeline.html';a.download='timeline.html';document.body.appendChild(a);a.click();a.remove();" style="font-size:11px;color:#6c5ce7;cursor:pointer">↓ .html</span><span class="card-arrow">→</span></span></div>
       </div>
     </a>
     <div class="demo-card coming-soon" data-tags="interaction">
