@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claw Game</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #1a1a2e;
+  --cabinet: #16213e;
+  --glass: rgba(100,180,255,0.08);
+  --glass-border: rgba(100,180,255,0.2);
+  --accent: #e94560;
+  --yellow: #f5c518;
+  --text: #eee;
+  --muted: #888;
+}
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px;
+}
+h1 { font-size: 13px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+
+.hud {
+  display: flex;
+  gap: 32px;
+  align-items: center;
+}
+.hud-item { text-align: center; }
+.hud-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+.hud-value { font-size: 22px; font-weight: 700; color: var(--yellow); font-variant-numeric: tabular-nums; }
+
+.cabinet {
+  background: var(--cabinet);
+  border-radius: 16px;
+  border: 2px solid rgba(255,255,255,0.07);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+  padding: 12px;
+  position: relative;
+}
+
+canvas {
+  display: block;
+  border-radius: 8px;
+  border: 1.5px solid var(--glass-border);
+  background: linear-gradient(180deg, #0f0c29 0%, #302b63 60%, #24243e 100%);
+  image-rendering: pixelated;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.btn {
+  padding: 10px 20px;
+  border: 1.5px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all .15s;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.3); }
+.btn:active { transform: scale(0.97); }
+.btn.primary { background: var(--accent); border-color: var(--accent); font-weight: 600; }
+.btn.primary:hover { filter: brightness(1.1); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.hint {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.6;
+}
+.msg {
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 20px;
+  color: var(--yellow);
+  text-align: center;
+}
+</style>
+</head>
+<body>
+
+<h1>Claw Game</h1>
+
+<div class="hud">
+  <div class="hud-item">
+    <div class="hud-label">Score</div>
+    <div class="hud-value" id="score">0</div>
+  </div>
+  <div class="hud-item">
+    <div class="hud-label">Plays</div>
+    <div class="hud-value" id="plays">5</div>
+  </div>
+</div>
+
+<div class="cabinet">
+  <canvas id="c" width="360" height="420"></canvas>
+</div>
+
+<div class="msg" id="msg">Move the claw and press DROP</div>
+
+<div class="controls">
+  <button class="btn" id="btnLeft" onclick="moveLeft()">◀ Left</button>
+  <button class="btn primary" id="btnDrop" onclick="drop()">DROP</button>
+  <button class="btn" id="btnRight" onclick="moveRight()">Right ▶</button>
+</div>
+
+<div class="hint">← → arrow keys or buttons &nbsp;·&nbsp; Space or DROP to grab</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+// ── Layout constants ──────────────────────────────────────────────
+const RAIL_Y = 40;          // top rail y
+const CHUTE_X = W - 28;     // prize chute x
+const BIN_X = W - 60, BIN_Y = H - 50, BIN_W = 54, BIN_H = 50;
+const FLOOR_Y = H - 60;     // prize pile floor
+const CLAW_MIN_X = 30, CLAW_MAX_X = W - 80;
+const ROPE_RETRACT_Y = RAIL_Y + 20;
+
+// ── State ─────────────────────────────────────────────────────────
+let score = 0, plays = 5;
+let clawX = W / 2;
+let ropeY = ROPE_RETRACT_Y;   // bottom of rope = top of claw body
+let clawOpen = true;
+let held = null;              // prize being held
+let phase = 'idle';           // idle | dropping | grabbing | retracting | delivering | done
+let phaseTimer = 0;
+
+let prizes = [];
+const PRIZE_EMOJIS = ['🧸','🎀','🌸','⭐','🍬','🎲','🦄','🐣','💎','🎁'];
+
+function initPrizes() {
+  prizes = [];
+  const cols = 5, rows = 3;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      prizes.push({
+        x: 30 + c * 58 + Math.random() * 14,
+        y: FLOOR_Y - r * 42 - 18,
+        emoji: PRIZE_EMOJIS[Math.floor(Math.random() * PRIZE_EMOJIS.length)],
+        grabbed: false,
+        delivered: false,
+      });
+    }
+  }
+}
+
+// ── Controls ──────────────────────────────────────────────────────
+function canControl() { return phase === 'idle'; }
+function moveLeft()  { if (canControl()) clawX = Math.max(CLAW_MIN_X, clawX - 20); }
+function moveRight() { if (canControl()) clawX = Math.min(CLAW_MAX_X, clawX + 20); }
+
+function drop() {
+  if (!canControl() || plays <= 0) return;
+  plays--;
+  document.getElementById('plays').textContent = plays;
+  setMsg('');
+  phase = 'dropping';
+  clawOpen = true;
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft')  { e.preventDefault(); moveLeft(); }
+  if (e.key === 'ArrowRight') { e.preventDefault(); moveRight(); }
+  if (e.key === ' ' || e.key === 'ArrowDown') { e.preventDefault(); drop(); }
+});
+
+// ── Helpers ───────────────────────────────────────────────────────
+function setMsg(t) { document.getElementById('msg').textContent = t; }
+function updateUI() {
+  document.getElementById('score').textContent = score;
+  const busy = phase !== 'idle';
+  document.getElementById('btnLeft').disabled  = busy;
+  document.getElementById('btnRight').disabled = busy;
+  document.getElementById('btnDrop').disabled  = busy || plays <= 0;
+}
+
+function nearestPrize() {
+  let best = null, bestD = 40;
+  for (const p of prizes) {
+    if (p.grabbed || p.delivered) continue;
+    const d = Math.hypot(p.x - clawX, p.y - (ropeY + 28));
+    if (d < bestD) { best = p; bestD = d; }
+  }
+  return best;
+}
+
+// ── Draw helpers ──────────────────────────────────────────────────
+function drawBackground() {
+  // stars
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  [[20,30],[60,15],[120,55],[200,20],[280,40],[330,18],[50,90],[150,80]].forEach(([x,y])=>{
+    ctx.beginPath(); ctx.arc(x,y,1,0,Math.PI*2); ctx.fill();
+  });
+
+  // glass side panels
+  ctx.fillStyle = 'rgba(80,160,255,0.04)';
+  ctx.fillRect(0, 0, 14, H);
+  ctx.fillRect(W-14, 0, 14, H);
+
+  // floor
+  ctx.fillStyle = 'rgba(255,255,255,0.04)';
+  ctx.fillRect(0, FLOOR_Y + 8, W, H - FLOOR_Y - 8);
+
+  // chute opening
+  ctx.fillStyle = 'rgba(100,200,100,0.12)';
+  ctx.fillRect(BIN_X, BIN_Y, BIN_W, BIN_H);
+  ctx.strokeStyle = 'rgba(100,200,100,0.3)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(BIN_X, BIN_Y, BIN_W, BIN_H);
+  ctx.fillStyle = 'rgba(100,200,100,0.5)';
+  ctx.font = '10px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('WIN', BIN_X + BIN_W/2, BIN_Y + BIN_H/2 + 4);
+}
+
+function drawRail() {
+  // top rail
+  const grad = ctx.createLinearGradient(0, RAIL_Y - 6, 0, RAIL_Y + 6);
+  grad.addColorStop(0, '#555');
+  grad.addColorStop(0.5, '#ccc');
+  grad.addColorStop(1, '#444');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.roundRect(CLAW_MIN_X - 10, RAIL_Y - 5, CLAW_MAX_X - CLAW_MIN_X + 80, 10, 4);
+  ctx.fill();
+}
+
+function drawClaw() {
+  const cx = clawX;
+  const ty = ropeY;          // top of claw body
+  const bodyH = 22;
+  const ropeSeg = ty - RAIL_Y;
+
+  // rope
+  ctx.strokeStyle = '#aaa';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(cx, RAIL_Y); ctx.lineTo(cx, ty); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // claw head
+  const headY = ty;
+  const headR = 10;
+  const grad = ctx.createRadialGradient(cx, headY, 2, cx, headY, headR);
+  grad.addColorStop(0, '#ddd'); grad.addColorStop(1, '#666');
+  ctx.fillStyle = grad;
+  ctx.beginPath(); ctx.arc(cx, headY, headR, 0, Math.PI*2); ctx.fill();
+
+  // three prongs
+  const spread = clawOpen ? 22 : 8;
+  const prongy = headY + headR;
+  const prongs = [-spread, 0, spread];
+  prongs.forEach(dx => {
+    ctx.strokeStyle = '#bbb';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx, prongy);
+    ctx.quadraticCurveTo(cx + dx * 0.5, prongy + 18, cx + dx, prongy + 26);
+    ctx.stroke();
+  });
+
+  // if holding something
+  if (held) {
+    ctx.font = '20px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(held.emoji, cx, prongy + 38);
+  }
+}
+
+function drawPrizes() {
+  ctx.font = '22px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (const p of prizes) {
+    if (p.grabbed || p.delivered) continue;
+    ctx.fillText(p.emoji, p.x, p.y);
+  }
+}
+
+// ── Game loop ─────────────────────────────────────────────────────
+const SPEED_DROP = 3, SPEED_RETRACT = 4;
+const DROP_MAX = FLOOR_Y - 30;
+
+function tick() {
+  switch (phase) {
+    case 'dropping':
+      ropeY += SPEED_DROP;
+      if (ropeY >= DROP_MAX) {
+        phase = 'grabbing';
+        phaseTimer = 18;
+      } else {
+        const p = nearestPrize();
+        if (p) { phase = 'grabbing'; phaseTimer = 18; }
+      }
+      break;
+
+    case 'grabbing':
+      clawOpen = phaseTimer > 9;
+      phaseTimer--;
+      if (phaseTimer <= 0) {
+        held = nearestPrize();
+        if (held) held.grabbed = true;
+        phase = 'retracting';
+      }
+      break;
+
+    case 'retracting':
+      ropeY -= SPEED_RETRACT;
+      if (held) { held.x = clawX; held.y = ropeY + 56; }
+      if (ropeY <= ROPE_RETRACT_Y) {
+        ropeY = ROPE_RETRACT_Y;
+        phase = held ? 'delivering' : 'idle';
+        if (!held) {
+          setMsg(plays > 0 ? 'Missed! Try again.' : 'Game over — refresh to play again!');
+          if (plays === 0) phase = 'done';
+        }
+      }
+      break;
+
+    case 'delivering':
+      // slide claw right to chute
+      if (clawX < CHUTE_X - 10) {
+        clawX += 4;
+        if (held) held.x = clawX;
+      } else {
+        // drop into bin
+        if (held) {
+          held.delivered = true;
+          held.grabbed = false;
+          held = null;
+          score += 10;
+          setMsg('Nice catch! +10');
+        }
+        clawOpen = true;
+        phase = plays > 0 ? 'idle' : 'done';
+        if (phase === 'done') setMsg('Game over! Final score: ' + score);
+      }
+      break;
+
+    case 'done':
+      break;
+  }
+}
+
+function render() {
+  ctx.clearRect(0, 0, W, H);
+  drawBackground();
+  drawRail();
+  drawPrizes();
+  drawClaw();
+  updateUI();
+}
+
+function loop() {
+  tick();
+  render();
+  requestAnimationFrame(loop);
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+initPrizes();
+loop();
+</script>
+</body>
+</html>
