@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asset Cards — All States</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family:'DM Sans',sans-serif; background:#f5f4f0; color:#1a1a1a; min-height:100vh; padding:24px 16px 48px; }
+
+/* — Page chrome (matches timeline) — */
+.page-header { max-width:1100px; margin:0 auto 28px; }
+.back { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:#888; text-decoration:none; margin-bottom:20px; transition:color .15s; }
+.back:hover { color:#1a1a1a; }
+.back::before { content:'←'; }
+h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; }
+.subtitle { font-size:13px; color:#888; }
+.tag-header { display:inline-block; font-size:11px; background:#e8e6df; color:#666; border-radius:20px; padding:2px 10px; margin-top:8px; }
+
+.full-row { max-width:1100px; margin:0 auto 24px; }
+.two-col { display:grid; grid-template-columns:minmax(0,560px) minmax(0,480px); gap:24px; max-width:1100px; margin:0 auto; align-items:start; }
+@media (max-width:960px) { .two-col { grid-template-columns:1fr; } }
+
+.card { background:#fff; border-radius:16px; padding:20px; border:0.5px solid #e0ddd6; margin-bottom:16px; }
+.card-label { font-size:11px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:#aaa; margin-bottom:12px; }
+
+/* — Spec panel (right column) — */
+.spec-card { background:#fff; border-radius:16px; padding:20px 24px; border:0.5px solid #e0ddd6; margin-bottom:16px; }
+.spec-label { font-size:11px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:#aaa; margin-bottom:12px; }
+.token-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.token-item { background:#fafaf8; border-radius:8px; padding:8px 10px; }
+.token-name { font-size:10px; font-family:'DM Mono',monospace; color:#aaa; margin-bottom:3px; }
+.token-val { font-size:12px; font-weight:500; color:#1a1a1a; display:flex; align-items:center; gap:6px; }
+.token-swatch { width:12px; height:12px; border-radius:3px; border:0.5px solid #e0ddd6; flex-shrink:0; }
+.spec-divider { height:0.5px; background:#e8e6df; margin:16px 0; }
+.rule-title { font-size:13px; font-weight:500; color:#1a1a1a; margin-bottom:8px; }
+.rule-list { display:flex; flex-direction:column; gap:6px; }
+.rule-item { display:flex; gap:8px; font-size:12px; line-height:1.6; color:#666; }
+.rule-num { flex-shrink:0; width:18px; height:18px; border-radius:50%; background:#f0ede6; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:500; color:#888; margin-top:2px; }
+.code-i { font-family:'DM Mono',monospace; font-size:10px; background:#f0ede6; padding:1px 4px; border-radius:3px; }
+.tag-p { display:inline-block; font-size:10px; padding:1px 6px; border-radius:10px; font-weight:500; }
+.tag-must { background:#fce8e8; color:#a33; }
+.tag-should { background:#fef3e2; color:#854f0b; }
+
+.dl-link { display:inline-flex; align-items:center; gap:5px; font-size:12px; color:#6c5ce7; text-decoration:none; transition:opacity .15s; max-width:1100px; margin:16px auto 0; }
+.dl-link:hover { opacity:0.7; }
+.dl-link::before { content:'↓'; }
+
+/* — Edit inputs area — */
+.edit-bar { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; align-items:flex-end; }
+.edit-group { display:flex; flex-direction:column; gap:3px; }
+.edit-group label { font-size:10px; font-weight:500; letter-spacing:.06em; text-transform:uppercase; color:#aaa; }
+.edit-group input {
+  font-family:'Inter',sans-serif; font-size:13px; padding:5px 8px;
+  border:1px solid #ddd; border-radius:6px; background:#fff; color:#1a1a1a; outline:none; width:120px;
+}
+.edit-group input:focus { border-color:#888; }
+
+/* ============================================
+   ASSET CARD — pixel-matched to Figma
+   ============================================ */
+
+/* Container */
+.ac {
+  font-family:'Inter',sans-serif;
+  border:1px solid #d4d9e1; border-radius:16px;
+  overflow:hidden; display:flex; align-items:center;
+  justify-content:space-between;
+  padding:16px 24px 16px 16px;
+  background:#fff;
+  transition:border-color .2s;
+  cursor:default;
+  user-select:none;
+}
+.ac--error   { border-color:#e24f4b; }
+.ac--editing { padding:16px; }
+
+/* Left group */
+.ac__left { display:flex; gap:16px; align-items:center; min-width:0; }
+
+/* Thumbnail icon box — 88×88 = 32px pad + 24px icon */
+.ac__thumb {
+  width:88px; height:88px; flex-shrink:0;
+  background:#edeef2; border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  position:relative; overflow:hidden;
+}
+.ac__thumb svg.cube-icon { width:24px; height:24px; color:#8b8fa3; }
+.ac__thumb-overlay {
+  position:absolute; inset:0;
+  background:rgba(0,0,0,0.5); border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; transition:opacity .15s; pointer-events:none;
+}
+.ac__thumb-overlay svg { width:24px; height:24px; color:#fff; }
+
+/* Text */
+.ac__text { display:flex; flex-direction:column; justify-content:center; min-width:0; }
+.ac__text--error-gap { gap:4px; }
+.ac__text--edit-gap  { gap:8px; }
+
+.ac__name-row { display:flex; align-items:center; }
+.ac__name {
+  font-size:16px; font-weight:700; line-height:1.3; white-space:nowrap;
+  color:#1c1c1c;
+}
+.ac__name--disabled  { color:#a4adb9; }
+.ac__name--secondary { color:#535353; }
+
+/* Pencil button next to name */
+.ac__edit-btn {
+  width:32px; height:32px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  border:none; background:none; border-radius:4px; cursor:pointer;
+  opacity:0; transition:opacity .15s;
+}
+.ac__edit-btn:hover { background:#f5f5f5; }
+.ac__edit-btn svg { width:16px; height:16px; color:#535353; }
+
+/* Details row */
+.ac__details {
+  display:flex; gap:8px; align-items:center;
+  font-size:14px; font-weight:400; line-height:1.3;
+  color:#1c1c1c; white-space:nowrap;
+}
+.ac__details--disabled { color:#a4adb9; }
+.ac__status-ready  { color:#39a86b; }
+.ac__status-failed { color:#e24f4b; }
+
+/* Error row */
+.ac__error-row {
+  display:flex; gap:4px; align-items:center;
+  font-size:14px; font-weight:400; line-height:1.3; color:#e24f4b;
+}
+.ac__error-row svg { width:16px; height:16px; flex-shrink:0; color:#e24f4b; }
+
+/* Inline text field (editing state) */
+.ac__field-row { display:flex; align-items:center; gap:8px; }
+.ac__field {
+  width:200px; height:40px;
+  border:1px solid #bcc3cc; border-radius:4px;
+  padding:8px 12px; font-family:'Inter',sans-serif; font-size:14px;
+  color:#303640; background:#fff; outline:none;
+}
+.ac__field:focus { border-color:#00a9a1; }
+.ac__check-btn {
+  width:32px; height:32px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  border:none; background:none; border-radius:4px; cursor:pointer;
+}
+.ac__check-btn:hover { background:#f5f5f5; }
+.ac__check-btn svg { width:16px; height:16px; color:#535353; }
+
+/* Right side — remove button (default / error states) */
+.ac__remove-btn {
+  height:32px; padding:0 32px; flex-shrink:0;
+  border:1px solid #bcc3cc; border-radius:4px;
+  background:none; font-family:'Inter',sans-serif; font-size:14px; font-weight:500;
+  color:#e24f4b; cursor:pointer;
+  opacity:0; transition:opacity .15s;
+}
+.ac__remove-btn:hover { background:#fef2f2; }
+
+/* Right side — trash icon (hovered states) */
+.ac__trash-btn {
+  width:44px; height:44px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  border:none; background:none; border-radius:4px; cursor:pointer;
+  opacity:0; transition:opacity .15s;
+}
+.ac__trash-btn:hover { background:#f5f5f5; }
+.ac__trash-btn svg { width:24px; height:24px; color:#535353; }
+
+/* Right side — uploading spinner */
+.ac__progress { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.ac__spinner {
+  width:24px; height:24px;
+  border:2.5px solid #e5e5e5; border-top-color:#00a9a1;
+  border-radius:50%; animation:acspin .7s linear infinite;
+}
+@keyframes acspin { to { transform:rotate(360deg); } }
+.ac__upload-text { font-size:14px; color:#9097a2; white-space:nowrap; }
+
+/* ——— Hover behaviour (real mouse hover) ——— */
+.ac--interactive:hover .ac__edit-btn   { opacity:1; }
+.ac--interactive:hover .ac__remove-btn { opacity:1; }
+.ac--interactive:hover .ac__trash-btn  { opacity:1; }
+
+/* Thumbnail hover zone */
+.ac__thumb--hoverable:hover .ac__thumb-overlay { opacity:1; }
+
+/* Showcase strip */
+.showcase { display:flex; flex-direction:column; gap:14px; }
+.showcase-label { font-size:10px; font-weight:500; letter-spacing:.06em; text-transform:uppercase; color:#aaa; margin-bottom:-6px; }
+
+/* State indicator */
+.state-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <a class="back" href="../index.html">Back to gallery</a>
+  <h1>Asset Cards — all states</h1>
+  <p class="subtitle">File upload card component with 7 interactive states from the 3D/2D Map project.</p>
+  <span class="tag-header">Component prototype</span>
+</div>
+
+<!-- ==================== FULL-WIDTH: Interactive demo ==================== -->
+<div class="full-row">
+  <div class="card">
+    <div class="card-label">Interactive demo</div>
+    <div class="edit-bar">
+      <div class="edit-group">
+        <label>File name</label>
+        <input type="text" id="inName" value="TV.GLB" oninput="renderPlayground()">
+      </div>
+      <div class="edit-group">
+        <label>Model size</label>
+        <input type="text" id="inModel" value="4121.1KB" oninput="renderPlayground()" style="width:100px">
+      </div>
+      <div class="edit-group">
+        <label>Thumb size</label>
+        <input type="text" id="inThumb" value="52.3KB" oninput="renderPlayground()" style="width:90px">
+      </div>
+    </div>
+    <p style="font-size:11px;color:#aaa;margin-bottom:10px">Hover the card or the thumbnail to see interactive states. Click the pencil to enter edit mode.</p>
+    <div id="playground"></div>
+  </div>
+</div>
+
+<div class="two-col">
+
+  <!-- ==================== LEFT COLUMN ==================== -->
+  <div>
+    <!-- All states showcase -->
+    <div class="card">
+      <div class="card-label">All 7 states</div>
+      <div class="showcase" id="showcase"></div>
+    </div>
+
+    <a class="dl-link" href="asset-cards.html" download="asset-cards.html">Download this demo</a>
+  </div>
+
+  <!-- ==================== RIGHT COLUMN ==================== -->
+  <div>
+    <!-- Design tokens -->
+    <div class="spec-card">
+      <div class="spec-label">Design tokens — 3D/2D Map</div>
+      <div class="token-grid">
+        <div class="token-item"><div class="token-name">primary/main</div><div class="token-val"><div class="token-swatch" style="background:#00a9a1"></div>#00a9a1</div></div>
+        <div class="token-item"><div class="token-name">error/main</div><div class="token-val"><div class="token-swatch" style="background:#e24f4b"></div>#e24f4b</div></div>
+        <div class="token-item"><div class="token-name">success/main</div><div class="token-val"><div class="token-swatch" style="background:#39a86b"></div>#39a86b</div></div>
+        <div class="token-item"><div class="token-name">secondary/main</div><div class="token-val"><div class="token-swatch" style="background:#edeef2"></div>#edeef2</div></div>
+        <div class="token-item"><div class="token-name">text/primary</div><div class="token-val"><div class="token-swatch" style="background:#1c1c1c"></div>#1c1c1c</div></div>
+        <div class="token-item"><div class="token-name">text/secondary</div><div class="token-val"><div class="token-swatch" style="background:#535353"></div>#535353</div></div>
+        <div class="token-item"><div class="token-name">text/disabled</div><div class="token-val"><div class="token-swatch" style="background:#a4adb9"></div>#a4adb9</div></div>
+        <div class="token-item"><div class="token-name">text/tertiary*</div><div class="token-val"><div class="token-swatch" style="background:#9097a2"></div>#9097a2</div></div>
+        <div class="token-item"><div class="token-name">border/divider</div><div class="token-val"><div class="token-swatch" style="background:#d4d9e1"></div>#d4d9e1</div></div>
+        <div class="token-item"><div class="token-name">border*/main</div><div class="token-val"><div class="token-swatch" style="background:#bcc3cc"></div>#bcc3cc</div></div>
+        <div class="token-item"><div class="token-name">EN/h5</div><div class="token-val">Inter 700 16/1.3</div></div>
+        <div class="token-item"><div class="token-name">EN/body1</div><div class="token-val">Inter 400 14/1.3</div></div>
+      </div>
+    </div>
+
+    <!-- Component anatomy -->
+    <div class="spec-card">
+      <div class="spec-label">Component anatomy</div>
+      <div style="margin-bottom:12px">
+        <svg width="100%" viewBox="0 0 460 140" style="display:block">
+          <!-- Card border -->
+          <rect x="4" y="4" width="452" height="132" rx="16" fill="white" stroke="#d4d9e1" stroke-width="1"/>
+          <!-- Thumb box -->
+          <rect x="20" y="22" width="88" height="88" rx="8" fill="#edeef2"/>
+          <text style="font-family:'DM Mono',monospace;font-size:8px;fill:#aaa" text-anchor="middle" x="64" y="70">88 × 88</text>
+          <!-- Gap annotation -->
+          <line x1="108" y1="46" x2="124" y2="46" stroke="#00a9a1" stroke-width="1" stroke-dasharray="2 2"/>
+          <text style="font-family:'DM Mono',monospace;font-size:8px;fill:#00a9a1" x="110" y="42">16</text>
+          <!-- Text block -->
+          <rect x="124" y="30" width="180" height="18" rx="2" fill="#f0ede6"/>
+          <text style="font-family:'Inter',sans-serif;font-size:10px;font-weight:700;fill:#1c1c1c" x="128" y="43">TV.GLB</text>
+          <text style="font-family:'DM Mono',monospace;font-size:7px;fill:#aaa" x="170" y="43">EN/h5 · 16px bold</text>
+          <rect x="124" y="54" width="260" height="16" rx="2" fill="#f0ede6"/>
+          <text style="font-family:'Inter',sans-serif;font-size:9px;fill:#1c1c1c" x="128" y="65">Model Size: 4121.1KB  Thumbnail: 52.3KB</text>
+          <text style="font-family:'Inter',sans-serif;font-size:9px;fill:#39a86b" x="340" y="65">Ready</text>
+          <text style="font-family:'DM Mono',monospace;font-size:7px;fill:#aaa" x="128" y="78">EN/body1 · 14px regular</text>
+          <!-- Padding annotations -->
+          <line x1="4" y1="136" x2="20" y2="136" stroke="#e24f4b" stroke-width="0.5" stroke-dasharray="2 2"/>
+          <text style="font-family:'DM Mono',monospace;font-size:7px;fill:#e24f4b" x="6" y="132">16</text>
+          <line x1="432" y1="136" x2="456" y2="136" stroke="#e24f4b" stroke-width="0.5" stroke-dasharray="2 2"/>
+          <text style="font-family:'DM Mono',monospace;font-size:7px;fill:#e24f4b" x="438" y="132">24</text>
+          <line x1="4" y1="4" x2="4" y2="20" stroke="#e24f4b" stroke-width="0.5" stroke-dasharray="2 2"/>
+          <text style="font-family:'DM Mono',monospace;font-size:7px;fill:#e24f4b" x="7" y="16">16</text>
+          <!-- Right action placeholder -->
+          <rect x="400" y="46" width="44" height="44" rx="4" fill="none" stroke="#bcc3cc" stroke-width="1" stroke-dasharray="3 2"/>
+          <text style="font-family:'DM Mono',monospace;font-size:7px;fill:#aaa" text-anchor="middle" x="422" y="72">44×44</text>
+          <text style="font-family:'DM Mono',monospace;font-size:7px;fill:#aaa" text-anchor="middle" x="422" y="100">action zone</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Interaction rules -->
+    <div class="spec-card">
+      <div class="spec-label">Interaction rules</div>
+      <div class="rule-list">
+        <div class="rule-item"><div class="rule-num">1</div><div>On <strong>card hover</strong>: pencil edit icon (<span class="code-i">opacity 0→1</span>) appears next to file name, trash/remove button appears on right. <span class="tag-p tag-must">must</span></div></div>
+        <div class="rule-item"><div class="rule-num">2</div><div>On <strong>thumbnail hover</strong>: dark overlay (<span class="code-i">rgba(0,0,0,0.5)</span>) with photo-plus icon appears over the 88×88 thumbnail. <span class="tag-p tag-must">must</span></div></div>
+        <div class="rule-item"><div class="rule-num">3</div><div><strong>Editing</strong>: inline text field replaces name (<span class="code-i">200×40px</span>, border <span class="code-i">#bcc3cc</span>), check icon to confirm, right action hidden. <span class="tag-p tag-must">must</span></div></div>
+        <div class="rule-item"><div class="rule-num">4</div><div><strong>Uploading</strong>: text/disabled colors, spinner animation, "Uploading..." label. No actions. <span class="tag-p tag-should">should</span></div></div>
+        <div class="rule-item"><div class="rule-num">5</div><div><strong>Error states</strong>: error row with exclamation icon. Model error also turns card border <span class="code-i">#e24f4b</span> and status to "Failed". <span class="tag-p tag-must">must</span></div></div>
+        <div class="rule-item"><div class="rule-num">6</div><div>Card width: <span class="code-i">779.5px</span> in Figma, responsive in demo. Border-radius <span class="code-i">16px</span>, border <span class="code-i">1px solid #d4d9e1</span>. <span class="tag-p tag-should">should</span></div></div>
+      </div>
+    </div>
+
+    <!-- State matrix -->
+    <div class="spec-card">
+      <div class="spec-label">State matrix</div>
+      <table style="width:100%;font-size:11px;border-collapse:collapse;font-family:'DM Mono',monospace">
+        <thead><tr style="text-align:left;color:#aaa;border-bottom:1px solid #e8e6df">
+          <th style="padding:6px 4px">State</th><th style="padding:6px 4px">Border</th><th style="padding:6px 4px">Name color</th><th style="padding:6px 4px">Right action</th>
+        </tr></thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #f0ede6"><td style="padding:5px 4px"><span class="state-dot" style="background:#9097a2"></span>Uploading</td><td style="padding:5px 4px">#d4d9e1</td><td style="padding:5px 4px">#a4adb9</td><td style="padding:5px 4px">Spinner</td></tr>
+          <tr style="border-bottom:1px solid #f0ede6"><td style="padding:5px 4px"><span class="state-dot" style="background:#1c1c1c"></span>Default</td><td style="padding:5px 4px">#d4d9e1</td><td style="padding:5px 4px">#1c1c1c</td><td style="padding:5px 4px">Remove (hidden)</td></tr>
+          <tr style="border-bottom:1px solid #f0ede6"><td style="padding:5px 4px"><span class="state-dot" style="background:#6c5ce7"></span>Hovered</td><td style="padding:5px 4px">#d4d9e1</td><td style="padding:5px 4px">#1c1c1c</td><td style="padding:5px 4px">Trash icon</td></tr>
+          <tr style="border-bottom:1px solid #f0ede6"><td style="padding:5px 4px"><span class="state-dot" style="background:#00a9a1"></span>Editing</td><td style="padding:5px 4px">#d4d9e1</td><td style="padding:5px 4px">—</td><td style="padding:5px 4px">Hidden</td></tr>
+          <tr style="border-bottom:1px solid #f0ede6"><td style="padding:5px 4px"><span class="state-dot" style="background:#854f0b"></span>Thumb hover</td><td style="padding:5px 4px">#d4d9e1</td><td style="padding:5px 4px">#1c1c1c</td><td style="padding:5px 4px">Trash icon</td></tr>
+          <tr style="border-bottom:1px solid #f0ede6"><td style="padding:5px 4px"><span class="state-dot" style="background:#e24f4b80"></span>Thumb error</td><td style="padding:5px 4px">#d4d9e1</td><td style="padding:5px 4px">#535353</td><td style="padding:5px 4px">Remove (hidden)</td></tr>
+          <tr><td style="padding:5px 4px"><span class="state-dot" style="background:#e24f4b"></span>Model error</td><td style="padding:5px 4px">#e24f4b</td><td style="padding:5px 4px">#535353</td><td style="padding:5px 4px">Remove (hidden)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ──────────── SVG Icons ──────────── */
+const ICO = {
+  cube: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
+  pencil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  photoPlus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/><line x1="16" y1="5" x2="16" y2="11"/><line x1="13" y1="8" x2="19" y2="8"/></svg>',
+  alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+};
+
+/* ──────────── Card builder ──────────── */
+function assetCard(state, data, opts) {
+  const d = data || { name:'TV.GLB', model:'4121.1KB', thumb:'52.3KB' };
+  const o = opts || {};
+  const interactive = o.interactive || false;
+  const isUp   = state === 'uploading';
+  const isEdit = state === 'editing';
+  const isTErr = state === 'thumb-error';
+  const isMErr = state === 'model-error';
+  const isErr  = isTErr || isMErr;
+  const errName = 'Super Cool TV';
+  const name = isErr ? errName : d.name;
+
+  // Container classes
+  let cls = 'ac';
+  if (isMErr) cls += ' ac--error';
+  if (isEdit) cls += ' ac--editing';
+  if (interactive) cls += ' ac--interactive';
+
+  // — Name section —
+  let nameHTML;
+  if (isEdit) {
+    const uid = 'ef-' + Math.random().toString(36).slice(2,6);
+    nameHTML = `
+      <div class="ac__field-row">
+        <input class="ac__field" id="${uid}" type="text" value="${d.name}">
+        <button class="ac__check-btn" onclick="exitEdit()">${ICO.check}</button>
+      </div>`;
+  } else {
+    const nc = isUp ? 'ac__name ac__name--disabled' : isErr ? 'ac__name ac__name--secondary' : 'ac__name';
+    const pencilVis = (interactive && !isUp) ? '' : 'style="display:none"';
+    const pencilClick = interactive ? `onclick="enterEdit(event)"` : '';
+    nameHTML = `
+      <div class="ac__name-row">
+        <span class="${nc}">${name}</span>
+        <button class="ac__edit-btn" ${pencilVis} ${pencilClick}>${ICO.pencil}</button>
+      </div>`;
+  }
+
+  // — Details row —
+  const dc = isUp ? 'ac__details ac__details--disabled' : 'ac__details';
+  const sizeText = isUp ? 'Model Size: Uploading' : `Model Size: ${d.model}`;
+  const thumbText = isUp ? 'Thumbnail: NA' : `Thumbnail: ${d.thumb}`;
+  let statusSpan = '';
+  if (!isUp && !isEdit) {
+    if (isMErr) statusSpan = '<span class="ac__status-failed">Failed</span>';
+    else statusSpan = '<span class="ac__status-ready">Ready</span>';
+  }
+  const detailsHTML = `<div class="${dc}"><span>${sizeText}</span><span>${thumbText}</span>${statusSpan}</div>`;
+
+  // — Error row —
+  let errorHTML = '';
+  if (isTErr) errorHTML = `<div class="ac__error-row">${ICO.alert}<span>Thumbnail: File size exceeded 500KB</span></div>`;
+  if (isMErr) errorHTML = `<div class="ac__error-row">${ICO.alert}<span>Model: Unsupported format</span></div>`;
+
+  // — Text wrapper —
+  const textCls = 'ac__text' + (isErr ? ' ac__text--error-gap' : isEdit ? ' ac__text--edit-gap' : '');
+
+  // — Thumbnail —
+  const thumbCls = 'ac__thumb' + (interactive && !isUp && !isEdit ? ' ac__thumb--hoverable' : '');
+  const thumbHTML = `
+    <div class="${thumbCls}">
+      <svg class="cube-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      <div class="ac__thumb-overlay">${ICO.photoPlus}</div>
+    </div>`;
+
+  // — Right action —
+  let rightHTML = '';
+  if (isUp) {
+    rightHTML = `<div class="ac__progress"><div class="ac__spinner"></div><span class="ac__upload-text">Uploading...</span></div>`;
+  } else if (isEdit) {
+    rightHTML = ''; // nothing
+  } else if (state === 'hovered' || state === 'thumb-hover') {
+    // In showcase, show trash always visible
+    if (!interactive) {
+      rightHTML = `<button class="ac__trash-btn" style="opacity:1">${ICO.trash}</button>`;
+    } else {
+      rightHTML = `<button class="ac__trash-btn">${ICO.trash}</button>`;
+    }
+  } else {
+    if (!interactive) {
+      rightHTML = `<button class="ac__remove-btn" style="opacity:0">Remove</button>`;
+    } else {
+      rightHTML = `<button class="ac__remove-btn">Remove</button>`;
+    }
+  }
+
+  return `
+    <div class="${cls}">
+      <div class="ac__left">
+        ${thumbHTML}
+        <div class="${textCls}">
+          ${isErr ? '<div>' : ''}
+          ${nameHTML}
+          ${detailsHTML}
+          ${isErr ? '</div>' : ''}
+          ${errorHTML}
+        </div>
+      </div>
+      ${rightHTML}
+    </div>`;
+}
+
+/* ──────────── Playground (interactive) ──────────── */
+let playState = 'default';
+
+function getInputs() {
+  return {
+    name:  document.getElementById('inName').value  || 'TV.GLB',
+    model: document.getElementById('inModel').value || '4121.1KB',
+    thumb: document.getElementById('inThumb').value || '52.3KB',
+  };
+}
+
+function renderPlayground() {
+  const d = getInputs();
+  document.getElementById('playground').innerHTML = assetCard(playState, d, { interactive: true });
+}
+
+function enterEdit(e) {
+  e.stopPropagation();
+  playState = 'editing';
+  renderPlayground();
+  // Focus the field
+  setTimeout(() => {
+    const f = document.querySelector('#playground .ac__field');
+    if (f) { f.focus(); f.select(); }
+  }, 30);
+}
+
+function exitEdit() {
+  const f = document.querySelector('#playground .ac__field');
+  if (f) document.getElementById('inName').value = f.value;
+  playState = 'default';
+  renderPlayground();
+}
+
+/* ──────────── Showcase (all 7 static states) ──────────── */
+function renderShowcase() {
+  const states = [
+    { key:'uploading',   label:'Uploading' },
+    { key:'default',     label:'Default' },
+    { key:'hovered',     label:'Hovered' },
+    { key:'editing',     label:'Editing Name' },
+    { key:'thumb-hover', label:'Thumbnail Hovered' },
+    { key:'thumb-error', label:'Thumbnail Error' },
+    { key:'model-error', label:'Model Error' },
+  ];
+  document.getElementById('showcase').innerHTML = states.map(s =>
+    `<div><div class="showcase-label">${s.label}</div>${assetCard(s.key)}</div>`
+  ).join('');
+}
+
+/* ──────────── Init ──────────── */
+document.fonts.ready.then(() => { renderPlayground(); renderShowcase(); }).catch(() => { renderPlayground(); renderShowcase(); });
+</script>
+</body>
+</html>
