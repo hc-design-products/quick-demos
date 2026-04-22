@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gift Card</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #0a0a0a;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #fff;
+  gap: 28px;
+  padding: 24px;
+}
+
+h1 {
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #555;
+}
+
+/* ── Controls ── */
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.theme-btn {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: transform .15s, border-color .15s;
+}
+.theme-btn:hover { transform: scale(1.15); }
+.theme-btn.active { border-color: #fff; }
+.theme-btn.fire   { background: linear-gradient(135deg,#ff6b35,#f7931e); }
+.theme-btn.ocean  { background: linear-gradient(135deg,#0575e6,#021b79); }
+.theme-btn.forest { background: linear-gradient(135deg,#56ab2f,#a8e063); }
+.theme-btn.candy  { background: linear-gradient(135deg,#f953c6,#b91d73); }
+.theme-btn.gold   { background: linear-gradient(135deg,#f7971e,#ffd200); }
+
+.row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+input[type="number"], input[type="text"] {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  color: #fff;
+  padding: 8px 12px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color .15s;
+}
+input[type="number"] { width: 90px; }
+input[type="text"]   { width: 220px; }
+input:focus { border-color: #666; }
+
+.generate-btn {
+  padding: 9px 22px;
+  border-radius: 8px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #fff;
+  color: #000;
+  transition: opacity .15s, transform .1s;
+}
+.generate-btn:hover { opacity: .85; }
+.generate-btn:active { transform: scale(.97); }
+
+/* ── Card stage ── */
+.card-stage {
+  position: relative;
+  width: 380px;
+  height: 220px;
+}
+
+/* The actual gift card */
+.card {
+  position: absolute; inset: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 22px 26px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.6);
+}
+
+.card-bg {
+  position: absolute; inset: 0;
+  transition: background .5s;
+}
+.card-bg.fire   { background: linear-gradient(135deg,#ff6b35 0%,#f7931e 50%,#ff4757 100%); }
+.card-bg.ocean  { background: linear-gradient(135deg,#021b79 0%,#0575e6 60%,#00d2ff 100%); }
+.card-bg.forest { background: linear-gradient(135deg,#1a3a1a 0%,#56ab2f 60%,#a8e063 100%); }
+.card-bg.candy  { background: linear-gradient(135deg,#b91d73 0%,#f953c6 60%,#ff9cee 100%); }
+.card-bg.gold   { background: linear-gradient(135deg,#7f4f00 0%,#f7971e 50%,#ffd200 100%); }
+
+/* decorative circles */
+.card-bg::before, .card-bg::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,.08);
+}
+.card-bg::before { width: 240px; height: 240px; top: -80px; right: -60px; }
+.card-bg::after  { width: 160px; height: 160px; bottom: -60px; left: -40px; }
+
+.card-top, .card-bottom { position: relative; z-index: 1; }
+
+.card-label {
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  opacity: .7;
+}
+.card-brand { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; margin-top: 2px; }
+
+.card-amount {
+  font-size: 48px;
+  font-weight: 900;
+  letter-spacing: -2px;
+  line-height: 1;
+  text-shadow: 0 2px 12px rgba(0,0,0,.3);
+}
+.card-amount span { font-size: 22px; font-weight: 600; vertical-align: super; line-height: 1.8; }
+
+.card-message {
+  font-size: 12px;
+  opacity: .8;
+  margin-top: 4px;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.card-code-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.card-code {
+  font-size: 13px;
+  letter-spacing: 2px;
+  font-variant-numeric: tabular-nums;
+  font-family: 'Courier New', monospace;
+  opacity: .9;
+}
+
+/* ── Scratch overlay ── */
+.scratch-wrap {
+  position: absolute; inset: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  cursor: crosshair;
+}
+#scratchCanvas {
+  display: block;
+  width: 100%; height: 100%;
+}
+
+/* ── Reveal button ── */
+.reveal-hint {
+  font-size: 11px;
+  color: #555;
+  letter-spacing: 1px;
+}
+
+/* ── Confetti canvas ── */
+#confettiCanvas {
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* ── Flip animation ── */
+@keyframes flipIn {
+  0%   { transform: rotateY(90deg) scale(.8); opacity: 0; }
+  100% { transform: rotateY(0deg)  scale(1);  opacity: 1; }
+}
+.flip-in { animation: flipIn .45s cubic-bezier(.34,1.56,.64,1) forwards; }
+
+/* ── Copy toast ── */
+.toast {
+  position: fixed;
+  bottom: 32px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #fff;
+  color: #000;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity .2s, transform .2s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<h1>Gift Card Demo</h1>
+
+<!-- Controls -->
+<div class="controls">
+  <button class="theme-btn fire active"  data-theme="fire"   title="Fire"></button>
+  <button class="theme-btn ocean"        data-theme="ocean"  title="Ocean"></button>
+  <button class="theme-btn forest"       data-theme="forest" title="Forest"></button>
+  <button class="theme-btn candy"        data-theme="candy"  title="Candy"></button>
+  <button class="theme-btn gold"         data-theme="gold"   title="Gold"></button>
+</div>
+
+<div class="row">
+  <span style="font-size:12px;color:#666">$</span>
+  <input type="number" id="amountInput" value="50" min="1" max="9999">
+  <input type="text"   id="msgInput"    value="Happy Birthday! 🎂" placeholder="Message…">
+  <button class="generate-btn" id="generateBtn">Generate</button>
+</div>
+
+<!-- Card -->
+<div class="card-stage" id="cardStage">
+  <div class="card" id="card">
+    <div class="card-bg fire" id="cardBg"></div>
+    <div class="card-top">
+      <div class="card-label">Gift Card</div>
+      <div class="card-brand">QuickDemo</div>
+    </div>
+    <div class="card-bottom">
+      <div class="card-amount" id="cardAmount"><span>$</span>50</div>
+      <div class="card-message" id="cardMsg">Happy Birthday! 🎂</div>
+      <div class="card-code-row">
+        <div class="card-code" id="cardCode">XXXX-XXXX-XXXX</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scratch overlay -->
+  <div class="scratch-wrap" id="scratchWrap">
+    <canvas id="scratchCanvas"></canvas>
+  </div>
+</div>
+
+<div class="reveal-hint" id="hint">← scratch or tap to reveal →</div>
+
+<canvas id="confettiCanvas"></canvas>
+<div class="toast" id="toast">Code copied!</div>
+
+<script>
+// ── State ──
+let currentTheme = 'fire';
+let scratchPct = 0;
+let revealed = false;
+let isDrawing = false;
+
+// ── Theme buttons ──
+document.querySelectorAll('.theme-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTheme = btn.dataset.theme;
+  });
+});
+
+// ── Generate ──
+document.getElementById('generateBtn').addEventListener('click', generate);
+
+function generate() {
+  const amount = parseInt(document.getElementById('amountInput').value) || 50;
+  const msg    = document.getElementById('msgInput').value || '';
+  const code   = randomCode();
+
+  document.getElementById('cardAmount').innerHTML = `<span>$</span>${amount.toLocaleString()}`;
+  document.getElementById('cardMsg').textContent  = msg;
+  document.getElementById('cardCode').textContent = code;
+  document.getElementById('cardBg').className     = `card-bg ${currentTheme}`;
+
+  // Reset & animate card
+  revealed = false;
+  scratchPct = 0;
+  document.getElementById('hint').textContent = '← scratch or tap to reveal →';
+
+  const card = document.getElementById('card');
+  card.classList.remove('flip-in');
+  void card.offsetWidth;
+  card.classList.add('flip-in');
+
+  // Reset scratch
+  initScratch();
+}
+
+function randomCode() {
+  return Array.from({length:3}, () =>
+    Math.random().toString(36).slice(2,6).toUpperCase()
+  ).join('-');
+}
+
+// ── Scratch canvas ──
+const scratchCanvas = document.getElementById('scratchCanvas');
+const sCtx = scratchCanvas.getContext('2d');
+const stage = document.getElementById('cardStage');
+
+function initScratch() {
+  const W = stage.offsetWidth;
+  const H = stage.offsetHeight;
+  scratchCanvas.width  = W;
+  scratchCanvas.height = H;
+
+  // Fill with foil-like gradient
+  const grad = sCtx.createLinearGradient(0, 0, W, H);
+  grad.addColorStop(0,   '#888');
+  grad.addColorStop(.3,  '#ccc');
+  grad.addColorStop(.5,  '#aaa');
+  grad.addColorStop(.7,  '#ddd');
+  grad.addColorStop(1,   '#999');
+  sCtx.fillStyle = grad;
+  sCtx.fillRect(0, 0, W, H);
+
+  // Foil shimmer lines
+  sCtx.strokeStyle = 'rgba(255,255,255,.15)';
+  sCtx.lineWidth = 1;
+  for (let i = 0; i < W; i += 6) {
+    sCtx.beginPath();
+    sCtx.moveTo(i, 0);
+    sCtx.lineTo(i - 40, H);
+    sCtx.stroke();
+  }
+
+  // Label
+  sCtx.fillStyle = 'rgba(0,0,0,.4)';
+  sCtx.font = 'bold 16px system-ui';
+  sCtx.textAlign = 'center';
+  sCtx.textBaseline = 'middle';
+  sCtx.fillText('🎁  Scratch to Reveal', W/2, H/2);
+
+  // Show wrap
+  document.getElementById('scratchWrap').style.display = 'block';
+}
+
+function scratch(x, y) {
+  sCtx.globalCompositeOperation = 'destination-out';
+  sCtx.beginPath();
+  sCtx.arc(x, y, 28, 0, Math.PI * 2);
+  sCtx.fill();
+  checkReveal();
+}
+
+function checkReveal() {
+  if (revealed) return;
+  const data = sCtx.getImageData(0, 0, scratchCanvas.width, scratchCanvas.height).data;
+  let transparent = 0;
+  for (let i = 3; i < data.length; i += 4) {
+    if (data[i] < 128) transparent++;
+  }
+  const pct = transparent / (scratchCanvas.width * scratchCanvas.height);
+  if (pct > 0.45) fullyReveal();
+}
+
+function fullyReveal() {
+  revealed = true;
+  // Fade out scratch layer
+  let op = 1;
+  const fade = setInterval(() => {
+    op -= 0.06;
+    scratchCanvas.style.opacity = op;
+    if (op <= 0) {
+      clearInterval(fade);
+      document.getElementById('scratchWrap').style.display = 'none';
+      scratchCanvas.style.opacity = 1;
+    }
+  }, 16);
+  document.getElementById('hint').textContent = 'Tap the code to copy';
+  launchConfetti();
+}
+
+// Pointer events
+function getPos(e) {
+  const rect = scratchCanvas.getBoundingClientRect();
+  const touch = e.touches ? e.touches[0] : e;
+  return {
+    x: (touch.clientX - rect.left) * (scratchCanvas.width  / rect.width),
+    y: (touch.clientY - rect.top)  * (scratchCanvas.height / rect.height)
+  };
+}
+
+scratchCanvas.addEventListener('mousedown',  e => { isDrawing = true;  scratch(...Object.values(getPos(e))); });
+scratchCanvas.addEventListener('mousemove',  e => { if (isDrawing) scratch(...Object.values(getPos(e))); });
+scratchCanvas.addEventListener('mouseup',    () => isDrawing = false);
+scratchCanvas.addEventListener('mouseleave', () => isDrawing = false);
+scratchCanvas.addEventListener('touchstart', e => { e.preventDefault(); isDrawing = true; scratch(...Object.values(getPos(e))); }, {passive:false});
+scratchCanvas.addEventListener('touchmove',  e => { e.preventDefault(); if (isDrawing) scratch(...Object.values(getPos(e))); }, {passive:false});
+scratchCanvas.addEventListener('touchend',   () => isDrawing = false);
+
+// Copy code on click
+document.getElementById('card').addEventListener('click', () => {
+  if (!revealed) return;
+  const code = document.getElementById('cardCode').textContent;
+  navigator.clipboard.writeText(code).catch(() => {});
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+});
+
+// ── Confetti ──
+const confCanvas = document.getElementById('confettiCanvas');
+const cCtx = confCanvas.getContext('2d');
+let particles = [];
+
+function launchConfetti() {
+  confCanvas.width  = window.innerWidth;
+  confCanvas.height = window.innerHeight;
+  const colors = ['#ff6b35','#f7931e','#ffd200','#f953c6','#0575e6','#56ab2f','#fff'];
+  particles = Array.from({length: 120}, () => ({
+    x: Math.random() * confCanvas.width,
+    y: -10,
+    w: 6 + Math.random() * 8,
+    h: 3 + Math.random() * 5,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    vx: (Math.random() - .5) * 4,
+    vy: 2 + Math.random() * 4,
+    rot: Math.random() * Math.PI * 2,
+    vr: (Math.random() - .5) * .2,
+    alpha: 1
+  }));
+  animateConfetti();
+}
+
+function animateConfetti() {
+  cCtx.clearRect(0, 0, confCanvas.width, confCanvas.height);
+  particles = particles.filter(p => p.alpha > 0);
+  particles.forEach(p => {
+    p.x  += p.vx;
+    p.y  += p.vy;
+    p.rot += p.vr;
+    p.vy += .05;
+    if (p.y > confCanvas.height * .8) p.alpha -= .025;
+    cCtx.save();
+    cCtx.globalAlpha = p.alpha;
+    cCtx.translate(p.x, p.y);
+    cCtx.rotate(p.rot);
+    cCtx.fillStyle = p.color;
+    cCtx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+    cCtx.restore();
+  });
+  if (particles.length > 0) requestAnimationFrame(animateConfetti);
+}
+
+// ── Init ──
+initScratch();
+</script>
+</body>
+</html>
