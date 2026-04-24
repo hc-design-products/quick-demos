@@ -5,10 +5,13 @@ A static HTML gallery for design prototypes and interaction demos.
 ## Structure
 
 ```
-index.html          ← gallery homepage
+index.html              ← gallery homepage
 demos/
-  timeline.html     ← Timeline Picker demo
-  your-demo.html    ← add more here
+  badge.html            ← Badge Guideline
+  timeline.html         ← Timeline Picker
+  asset-cards.html      ← Asset Cards
+  gift-card.html        ← Gift Card
+  claw-game.html        ← Claw Game
 ```
 
 ## Adding a new demo
