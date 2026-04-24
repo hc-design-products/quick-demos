@@ -30,9 +30,9 @@ h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; 
 .timeline { height:400px; overflow-y:scroll; position:relative; border:0.5px solid #e8e6df; border-radius:12px; background:#fafaf8; }
 .tl-inner { position:relative; height:1040px; }
 .hour-row { position:absolute; left:0; right:0; display:flex; align-items:flex-start; padding:0 8px; pointer-events:none; }
-.hour-label { width:42px; font-size:11px; color:#bbb; padding-top:2px; flex-shrink:0; font-family:'DM Mono',monospace; }
-.hour-line { flex:1; height:0.5px; background:#e8e6df; margin-top:8px; }
-.quarter-line { position:absolute; left:50px; right:8px; height:0.5px; background:#eeece7; opacity:0.7; pointer-events:none; }
+.hour-label { width:42px; font-size:11px; color:#bbb; flex-shrink:0; font-family:'DM Mono',monospace; margin-top:-6px; }
+.hour-line { flex:1; height:0.5px; background:#e8e6df; }
+.quarter-line { position:absolute; left:48px; right:8px; height:0.5px; background:#eeece7; opacity:0.7; pointer-events:none; }
 
 .ev { position:absolute; border-radius:8px; overflow:visible; font-size:11px; }
 .ev.preset { background:#e8f5ee; border-left:3px solid #2d9e6b; color:#1a6b45; pointer-events:none; padding:4px 8px; }
@@ -40,16 +40,8 @@ h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; 
 .ev.new-a { background:#eeeafd; border-left:3px solid #6c5ce7; color:#3d2fa0; pointer-events:all; padding:14px 8px; cursor:grab; touch-action:none; transition:background .15s,border-color .15s; }
 .ev.new-a.dragging { opacity:0.55; cursor:grabbing; }
 .ev.new-a.overlap { background:rgba(226,79,75,0.3); border-left-color:#e24f4b; }
-.ev.new-b { background:#eeeafd; color:#3d2fa0; pointer-events:all; padding:14px 8px 14px 20px; cursor:default; touch-action:none; border-radius:8px; transition:background .15s,border-color .15s; }
-.ev.new-b.overlap { background:rgba(226,79,75,0.3); }
-.ev.new-b.overlap .left-move-handle::before { background:#e24f4b; }
 .ev.overlap .handle-tb::after { background:#e24f4b; }
 
-.left-move-handle { position:absolute; left:-12px; top:-8px; bottom:-8px; width:36px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; cursor:grab; touch-action:none; z-index:2; }
-.left-move-handle::before { content:''; position:absolute; left:12px; top:8px; bottom:8px; width:12px; background:#6c5ce7; border-radius:8px 0 0 8px; }
-.left-move-handle.dragging { cursor:grabbing; opacity:0.7; }
-.left-move-handle span { display:block; width:3px; height:3px; border-radius:50%; background:rgba(255,255,255,0.65); position:relative; z-index:1; left:3px; }
-.left-move-handle:hover span { background:#fff; }
 
 .handle-tb { position:absolute; width:44px; height:44px; left:50%; margin-left:-22px; display:flex; align-items:center; justify-content:center; cursor:ns-resize; z-index:3; touch-action:none; }
 .handle-tb.top { top:-15px; }
@@ -108,9 +100,9 @@ h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; 
 <div class="tab-bar-wrap">
   <div class="tab-bar">
     <button class="tab-btn active" onclick="switchTab('sa',this)">Single&thinsp;&middot;&thinsp;Body move</button>
-    <button class="tab-btn"        onclick="switchTab('sb',this)">Single&thinsp;&middot;&thinsp;Left handle</button>
+    <button class="tab-btn"        onclick="switchTab('sc',this)">Single&thinsp;&middot;&thinsp;Tap create</button>
     <button class="tab-btn"        onclick="switchTab('ma',this)">Multi&thinsp;&middot;&thinsp;Body move</button>
-    <button class="tab-btn"        onclick="switchTab('mb',this)">Multi&thinsp;&middot;&thinsp;Left handle</button>
+    <button class="tab-btn"        onclick="switchTab('mc',this)">Multi&thinsp;&middot;&thinsp;Tap create</button>
   </div>
   <span class="tab-meta" id="tab-hint">drag body to move &middot; center handles to resize</span>
 </div>
@@ -237,20 +229,20 @@ h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; 
 </div>
 </div>
 
-<!-- TAB 2 — Single · Left handle -->
-<div class="tab-pane" id="pane-sb">
+<!-- TAB 2 — Single · Tap create -->
+<div class="tab-pane" id="pane-sc">
 <div class="two-col">
   <div>
     <div class="card">
       <div class="card-label">Demo</div>
-      <div class="timeline" id="tl-sb"></div>
-      <div class="status-bar" id="s-sb">left handle to move · center handles to resize</div>
+      <div class="timeline" id="tl-sc"></div>
+      <div class="status-bar" id="s-sc">tap empty space to create · drag to move · handles to resize</div>
     </div>
     <div class="card">
       <div class="card-label">Why this pattern</div>
       <p style="font-size:13px;color:#666;line-height:1.7">
-        Simplest version — one event, no overlapping columns. The left rail is the only move target.
-        Body area does nothing. Clearest possible gesture separation on mobile.
+        Tap-to-create — tap on any empty time slot to place a 1h event there.
+        Drag the body to move, center handles to resize. No pre-placed event on load.
       </p>
     </div>
   </div>
@@ -270,94 +262,51 @@ h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; 
     <div class="spec-card">
       <div class="spec-label">Component anatomy</div>
       <div class="spec-diagram"><svg width="100%" viewBox="0 0 520 200">
-        <rect x="24" y="34" width="234" height="76" rx="0 4 4 0" fill="#ace6e5" stroke="#01c5c1" stroke-width="1"/><rect x="10" y="34" width="14" height="76" rx="4 0 0 4" fill="#01c5c1"/>
-        <circle cx="17" cy="66" r="2" fill="rgba(255,255,255,0.7)"/><circle cx="17" cy="74" r="2" fill="rgba(255,255,255,0.7)"/><circle cx="17" cy="82" r="2" fill="rgba(255,255,255,0.7)"/>
-        <text style="font-family:Inter,sans-serif;font-size:11px;fill:#1c1c1c" x="34" y="58">09:00 ~ 10:00</text><text style="font-family:Inter,sans-serif;font-size:11px;fill:#1c1c1c" x="34" y="74">1h</text>
-        <rect x="119" y="17" width="44" height="44" rx="4" fill="none" stroke="#01c5c1" stroke-width="1.5" stroke-dasharray="4 3"/><line x1="130" y1="39" x2="152" y2="39" stroke="#01c5c1" stroke-width="2.5" stroke-linecap="round"/>
-        <rect x="119" y="83" width="44" height="44" rx="4" fill="none" stroke="#01c5c1" stroke-width="1.5" stroke-dasharray="4 3"/><line x1="130" y1="105" x2="152" y2="105" stroke="#01c5c1" stroke-width="2.5" stroke-linecap="round"/>
-        <rect x="0" y="26" width="36" height="92" rx="6" fill="none" stroke="#534AB7" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <rect x="10" y="34" width="248" height="76" rx="4" fill="#ace6e5" stroke="#01c5c1" stroke-width="1"/><rect x="10" y="34" width="4" height="76" fill="#01c5c1"/>
+        <text style="font-family:Inter,sans-serif;font-size:11px;fill:#1c1c1c" x="22" y="58">09:00 ~ 10:00</text><text style="font-family:Inter,sans-serif;font-size:11px;fill:#1c1c1c" x="22" y="74">1h</text>
+        <rect x="112" y="17" width="44" height="44" rx="4" fill="none" stroke="#01c5c1" stroke-width="1.5" stroke-dasharray="4 3"/><line x1="123" y1="39" x2="145" y2="39" stroke="#01c5c1" stroke-width="2.5" stroke-linecap="round"/>
+        <rect x="112" y="83" width="44" height="44" rx="4" fill="none" stroke="#01c5c1" stroke-width="1.5" stroke-dasharray="4 3"/><line x1="123" y1="105" x2="145" y2="105" stroke="#01c5c1" stroke-width="2.5" stroke-linecap="round"/>
+        <rect x="16" y="48" width="236" height="48" rx="2" fill="none" stroke="#0F6E56" stroke-width="1.5" stroke-dasharray="4 3"/>
         <line x1="258" y1="39" x2="290" y2="39" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/>
         <text style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;fill:#1a1a1a" x="296" y="35">Handle area</text><text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="296" y="49">44 x 44px · 22px teal line</text>
-        <line x1="0" y1="126" x2="0" y2="140" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/>
-        <text style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;fill:#534AB7" x="8" y="150">Move rail</text><text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="8" y="164">Visual: 14px · Touch: 36px</text>
-        <line x1="258" y1="72" x2="290" y2="100" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/>
-        <text style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;fill:#888" x="296" y="96">Body (no action)</text><text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="296" y="110">Content display only</text>
-        <text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="10" y="192">Mobile-Selector · bg: teal/300 · border: primary/main · padding: 8px · radius: 4px</text>
+        <line x1="258" y1="72" x2="290" y2="96" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/>
+        <text style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;fill:#0F6E56" x="296" y="92">Move zone</text><text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="296" y="106">Entire body (excl. handles)</text>
+        <text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="10" y="192">Mobile-Selector · bg: teal/300 · border-left: primary/main · padding: 8px · radius: 4px</text>
       </svg></div>
     </div>
     <div class="spec-card">
       <div class="spec-label">Error state — overlap</div>
       <div class="spec-diagram"><svg width="100%" viewBox="0 0 520 200">
-        <rect x="24" y="34" width="234" height="76" rx="0 4 4 0" fill="rgba(226,79,75,0.3)" stroke="#e24f4b" stroke-width="1"/><rect x="10" y="34" width="14" height="76" rx="4 0 0 4" fill="#e24f4b"/>
-        <circle cx="17" cy="66" r="2" fill="rgba(255,255,255,0.7)"/><circle cx="17" cy="74" r="2" fill="rgba(255,255,255,0.7)"/><circle cx="17" cy="82" r="2" fill="rgba(255,255,255,0.7)"/>
-        <text style="font-family:Inter,sans-serif;font-size:11px;fill:#1c1c1c" x="34" y="58">09:00 ~ 10:00</text><text style="font-family:Inter,sans-serif;font-size:11px;fill:#1c1c1c" x="34" y="74">1h</text>
-        <rect x="119" y="17" width="44" height="44" rx="4" fill="none" stroke="#e24f4b" stroke-width="1.5" stroke-dasharray="4 3"/><line x1="130" y1="39" x2="152" y2="39" stroke="#e24f4b" stroke-width="2.5" stroke-linecap="round"/>
-        <rect x="119" y="83" width="44" height="44" rx="4" fill="none" stroke="#e24f4b" stroke-width="1.5" stroke-dasharray="4 3"/><line x1="130" y1="105" x2="152" y2="105" stroke="#e24f4b" stroke-width="2.5" stroke-linecap="round"/>
+        <rect x="10" y="34" width="248" height="76" rx="4" fill="rgba(226,79,75,0.3)" stroke="#e24f4b" stroke-width="1"/><rect x="10" y="34" width="4" height="76" fill="#e24f4b"/>
+        <text style="font-family:Inter,sans-serif;font-size:11px;fill:#1c1c1c" x="22" y="58">09:00 ~ 10:00</text><text style="font-family:Inter,sans-serif;font-size:11px;fill:#1c1c1c" x="22" y="74">1h</text>
+        <rect x="112" y="17" width="44" height="44" rx="4" fill="none" stroke="#e24f4b" stroke-width="1.5" stroke-dasharray="4 3"/><line x1="123" y1="39" x2="145" y2="39" stroke="#e24f4b" stroke-width="2.5" stroke-linecap="round"/>
+        <rect x="112" y="83" width="44" height="44" rx="4" fill="none" stroke="#e24f4b" stroke-width="1.5" stroke-dasharray="4 3"/><line x1="123" y1="105" x2="145" y2="105" stroke="#e24f4b" stroke-width="2.5" stroke-linecap="round"/>
+        <rect x="16" y="48" width="236" height="48" rx="2" fill="none" stroke="#b33" stroke-width="1.5" stroke-dasharray="4 3"/>
         <line x1="258" y1="39" x2="290" y2="39" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/>
         <text style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;fill:#e24f4b" x="296" y="35">Handles turn red</text><text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="296" y="49">Line color: #e24f4b</text>
         <line x1="258" y1="72" x2="290" y2="96" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/>
         <text style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;fill:#b33" x="296" y="92">Error background</text><text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="296" y="106">rgba(226,79,75,0.3)</text>
         <line x1="10" y1="130" x2="10" y2="148" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/>
-        <text style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;fill:#e24f4b" x="18" y="144">Left rail: #e24f4b</text><text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="18" y="158">Replaces primary/main</text>
+        <text style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;fill:#e24f4b" x="18" y="144">Border-left: #e24f4b</text><text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="18" y="158">Replaces primary/main</text>
         <text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="10" y="192">Triggered when editable event overlaps any existing event · token: error/_states/focusvisible</text>
       </svg></div>
     </div>
     <div class="spec-card">
-      <div class="spec-label">Gesture zones</div>
-      <div class="spec-diagram"><svg width="100%" viewBox="0 0 520 130">
-        <rect x="24" y="10" width="234" height="90" rx="0 4 4 0" fill="#ace6e5" stroke="#01c5c1" stroke-width="1"/><rect x="10" y="10" width="14" height="90" rx="4 0 0 4" fill="#01c5c1"/>
-        <rect x="0" y="2" width="36" height="106" rx="6" fill="none" stroke="#534AB7" stroke-width="1.5" stroke-dasharray="4 3"/>
-        <rect x="119" y="0" width="44" height="44" rx="4" fill="none" stroke="#c33" stroke-width="1.5" stroke-dasharray="4 3"/><line x1="130" y1="22" x2="152" y2="22" stroke="#01c5c1" stroke-width="2.5" stroke-linecap="round"/>
-        <rect x="119" y="66" width="44" height="44" rx="4" fill="none" stroke="#c33" stroke-width="1.5" stroke-dasharray="4 3"/><line x1="130" y1="88" x2="152" y2="88" stroke="#01c5c1" stroke-width="2.5" stroke-linecap="round"/>
-        <rect x="40" y="26" width="212" height="58" rx="2" fill="none" stroke="#888" stroke-width="1" stroke-dasharray="4 3"/>
-        <line x1="258" y1="22" x2="290" y2="22" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/><text style="font-family:'DM Sans',sans-serif;font-size:11px;fill:#c33" x="296" y="18">Resize</text><text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="296" y="32">44x44 · touch-action: none</text>
-        <line x1="258" y1="55" x2="290" y2="55" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/><text style="font-family:'DM Sans',sans-serif;font-size:11px;fill:#888" x="296" y="51">No action (body)</text><text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="296" y="65">Content display only</text>
-        <line x1="0" y1="110" x2="0" y2="124" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/><text style="font-family:'DM Sans',sans-serif;font-size:11px;fill:#534AB7" x="8" y="124">Move (left rail only)</text>
-        <circle cx="296" cy="108" r="4" fill="#c33"/><text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#999" x="306" y="112">Resize</text>
-        <circle cx="358" cy="108" r="4" fill="#534AB7"/><text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#999" x="368" y="112">Move</text>
-        <circle cx="416" cy="108" r="4" fill="#888"/><text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#999" x="426" y="112">No action</text>
-      </svg></div>
-    </div>
-    <div class="spec-card">
-      <div class="spec-label">Handle reversal</div>
-      <div class="spec-diagram"><svg width="100%" viewBox="0 0 520 130">
-        <text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#999" x="55" y="12" text-anchor="middle">Start</text>
-        <rect x="24" y="20" width="76" height="68" rx="0 4 4 0" fill="#ace6e5" stroke="#01c5c1" stroke-width="1"/><rect x="10" y="20" width="14" height="68" rx="4 0 0 4" fill="#01c5c1"/>
-        <text style="font-family:Inter,sans-serif;font-size:10px;fill:#1c1c1c" x="32" y="50">09:00~10:00</text><text style="font-family:Inter,sans-serif;font-size:10px;fill:#1c1c1c" x="32" y="64">1h</text>
-        <line x1="35" y1="25" x2="75" y2="25" stroke="#01c5c1" stroke-width="2" stroke-linecap="round" opacity="0.4"/><line x1="35" y1="83" x2="75" y2="83" stroke="#01c5c1" stroke-width="2" stroke-linecap="round"/>
-        <text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#999" x="120" y="57">→</text>
-        <text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#999" x="195" y="12" text-anchor="middle">Min (15m)</text>
-        <rect x="164" y="63" width="76" height="18" rx="0 4 4 0" fill="#ace6e5" stroke="#01c5c1" stroke-width="1"/><rect x="150" y="63" width="14" height="18" rx="4 0 0 4" fill="#01c5c1"/>
-        <text style="font-family:Inter,sans-serif;font-size:10px;fill:#1c1c1c" x="183" y="76">15m</text>
-        <line x1="175" y1="65" x2="215" y2="65" stroke="#c33" stroke-width="2" stroke-linecap="round"/><line x1="175" y1="79" x2="215" y2="79" stroke="#01c5c1" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
-        <text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#c33" x="195" y="100" text-anchor="middle">Flips to top</text>
-        <text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#999" x="260" y="57">→</text>
-        <text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#999" x="340" y="12" text-anchor="middle">Result</text>
-        <rect x="309" y="20" width="76" height="68" rx="0 4 4 0" fill="#ace6e5" stroke="#01c5c1" stroke-width="1"/><rect x="295" y="20" width="14" height="68" rx="4 0 0 4" fill="#01c5c1"/>
-        <text style="font-family:Inter,sans-serif;font-size:10px;fill:#1c1c1c" x="317" y="50">08:00~09:00</text><text style="font-family:Inter,sans-serif;font-size:10px;fill:#1c1c1c" x="317" y="64">1h</text>
-        <line x1="320" y1="25" x2="360" y2="25" stroke="#01c5c1" stroke-width="2" stroke-linecap="round"/><line x1="320" y1="83" x2="360" y2="83" stroke="#01c5c1" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
-        <text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#999" x="340" y="104" text-anchor="middle">Top handle active</text>
-        <line x1="10" y1="122" x2="18" y2="122" stroke="#01c5c1" stroke-width="2" stroke-linecap="round"/><text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#999" x="24" y="126">Active</text>
-        <line x1="80" y1="122" x2="88" y2="122" stroke="#01c5c1" stroke-width="2" stroke-linecap="round" opacity="0.4"/><text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#999" x="94" y="126">Inactive</text>
-        <line x1="160" y1="122" x2="168" y2="122" stroke="#c33" stroke-width="2" stroke-linecap="round"/><text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#999" x="174" y="126">Flip</text>
-      </svg></div>
-    </div>
-        <div class="spec-card">
       <div class="spec-label">Behavior rules</div>
       <div class="rule-list">
-        <div class="rule-item"><div class="rule-num">1</div><div>Place one editable 1h event in first available slot on load. No tap-to-create. <span class="tag-p tag-must">must</span></div></div>
-        <div class="rule-item"><div class="rule-num">2</div><div>Left rail (14px visible, 36px touch target) is the only move handle. Event body has no gesture. <span class="tag-p tag-must">must</span></div></div>
-        <div class="rule-item"><div class="rule-num">3</div><div>Two center handles (top/bottom) to resize. Each handle uses <span class="code-i">setPointerCapture</span> on <span class="code-i">pointerdown</span>. <span class="tag-p tag-must">must</span></div></div>
-        <div class="rule-item"><div class="rule-num">4</div><div>Snap all edges to 15-min grid. Minimum duration: 15m. <span class="tag-p tag-must">must</span></div></div>
-        <div class="rule-item"><div class="rule-num">5</div><div>Overlap warning: when the editable event overlaps an existing event, switch to error state (<span class="code-i">error/focusvisible</span> background, red border-left and handles). <span class="tag-p tag-must">must</span></div></div>
-        <div class="rule-item"><div class="rule-num">6</div><div>Handle reversal: when a resize handle is dragged past the opposite edge, swap which end is being resized. <span class="tag-p tag-must">must</span></div></div>
-        <div class="rule-item"><div class="rule-num">7</div><div>Auto-scroll timeline when pointer is within 60px of top/bottom edge. <span class="tag-p tag-should">should</span></div></div>
+        <div class="rule-item"><div class="rule-num">1</div><div>Default 1h event in first available slot on load. Tap empty timeline space to reposition — creates a new 1h event at the tapped position (snapped to 15-min grid). <span class="tag-p tag-must">must</span></div></div>
+        <div class="rule-item"><div class="rule-num">2</div><div>One editable event at a time. Each tap replaces the current event at the new position. <span class="tag-p tag-must">must</span></div></div>
+        <div class="rule-item"><div class="rule-num">3</div><div>Drag event body to move. Requires 10px pointer travel before activating (prevents accidental drags). <span class="tag-p tag-must">must</span></div></div>
+        <div class="rule-item"><div class="rule-num">4</div><div>Two center handles (top/bottom) to resize. Each handle uses <span class="code-i">setPointerCapture</span> on <span class="code-i">pointerdown</span>. <span class="tag-p tag-must">must</span></div></div>
+        <div class="rule-item"><div class="rule-num">5</div><div>Snap all edges to 15-min grid. Minimum duration: 15m. <span class="tag-p tag-must">must</span></div></div>
+        <div class="rule-item"><div class="rule-num">6</div><div>Overlap warning: when the editable event overlaps an existing event, switch to error state (<span class="code-i">error/focusvisible</span> background, red border-left and handles). <span class="tag-p tag-must">must</span></div></div>
+        <div class="rule-item"><div class="rule-num">7</div><div>Handle reversal: when a resize handle is dragged past the opposite edge, swap which end is being resized. <span class="tag-p tag-must">must</span></div></div>
+        <div class="rule-item"><div class="rule-num">8</div><div>Auto-scroll timeline when pointer is within 60px of top/bottom edge. <span class="tag-p tag-should">should</span></div></div>
       </div>
       <div class="spec-divider"></div>
       <div class="rule-title">Mobile safety</div>
       <div class="rule-list">
-        <div class="rule-item"><div class="rule-num">8</div><div>No drag-to-create — long-press on empty space must not start an event (conflicts with native scroll). <span class="tag-p tag-must">must</span></div></div>
-        <div class="rule-item"><div class="rule-num">9</div><div>Set <span class="code-i">touch-action: none</span> on left rail and resize handles only. Body and background keep native scroll. <span class="tag-p tag-must">must</span></div></div>
+        <div class="rule-item"><div class="rule-num">9</div><div>Set <span class="code-i">touch-action: none</span> on event body and handles only. Background keeps native scroll. <span class="tag-p tag-must">must</span></div></div>
         <div class="rule-item"><div class="rule-num">10</div><div>Listen <span class="code-i">pointercancel</span> — revert to pre-drag position if browser reclaims the gesture. <span class="tag-p tag-must">must</span></div></div>
       </div>
     </div>
@@ -458,20 +407,21 @@ h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; 
 </div>
 </div>
 
-<!-- TAB 4 — Multi · Left handle -->
-<div class="tab-pane" id="pane-mb">
+<!-- TAB 4 — Multi · Tap create -->
+<div class="tab-pane" id="pane-mc">
 <div class="two-col">
   <div>
     <div class="card">
       <div class="card-label">Demo</div>
-      <div class="timeline" id="tl-mb"></div>
-      <div class="status-bar" id="s-mb">left handle to move · center handles to resize</div>
+      <div class="timeline" id="tl-mc"></div>
+      <div class="status-bar" id="s-mc">tap empty space to create · drag to move · handles to resize</div>
     </div>
     <div class="card">
       <div class="card-label">Why this pattern</div>
       <p style="font-size:13px;color:#666;line-height:1.7">
-        Full version with overlap columns — overlapping events split into equal-width columns automatically.
-        <strong>Move</strong> by dragging the left rail, <strong>resize</strong> via 44×44 center handles. Auto-scrolls near edges.
+        Full version with overlap columns + tap-to-create. Tap any empty slot to
+        place a 1h event. Overlapping events split into equal-width columns.
+        Drag the body to move, center handles to resize.
       </p>
     </div>
   </div>
@@ -491,67 +441,39 @@ h1 { font-size:22px; font-weight:500; letter-spacing:-0.3px; margin-bottom:4px; 
     <div class="spec-card">
       <div class="spec-label">Component anatomy</div>
       <div class="spec-diagram"><svg width="100%" viewBox="0 0 520 200">
-        <rect x="24" y="34" width="234" height="76" rx="0 4 4 0" fill="#ace6e5" stroke="#01c5c1" stroke-width="1"/><rect x="10" y="34" width="14" height="76" rx="4 0 0 4" fill="#01c5c1"/>
-        <circle cx="17" cy="66" r="2" fill="rgba(255,255,255,0.7)"/><circle cx="17" cy="74" r="2" fill="rgba(255,255,255,0.7)"/><circle cx="17" cy="82" r="2" fill="rgba(255,255,255,0.7)"/>
-        <text style="font-family:Inter,sans-serif;font-size:11px;fill:#1c1c1c" x="34" y="58">09:00 ~ 18:00</text><text style="font-family:Inter,sans-serif;font-size:11px;fill:#1c1c1c" x="34" y="74">1h</text>
-        <rect x="119" y="17" width="44" height="44" rx="4" fill="none" stroke="#01c5c1" stroke-width="1.5" stroke-dasharray="4 3"/><line x1="130" y1="39" x2="152" y2="39" stroke="#01c5c1" stroke-width="2.5" stroke-linecap="round"/>
-        <rect x="119" y="83" width="44" height="44" rx="4" fill="none" stroke="#01c5c1" stroke-width="1.5" stroke-dasharray="4 3"/><line x1="130" y1="105" x2="152" y2="105" stroke="#01c5c1" stroke-width="2.5" stroke-linecap="round"/>
-        <rect x="0" y="26" width="36" height="92" rx="6" fill="none" stroke="#534AB7" stroke-width="1.5" stroke-dasharray="4 3"/>
-        <line x1="258" y1="39" x2="290" y2="39" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/><text style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;fill:#1a1a1a" x="296" y="35">Handle area</text><text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="296" y="49">44 x 44px · 22px teal line</text>
-        <line x1="0" y1="126" x2="0" y2="140" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/><text style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;fill:#534AB7" x="8" y="150">Move rail</text><text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="8" y="164">Visual: 14px · Touch: 36px</text>
-        <line x1="258" y1="72" x2="290" y2="100" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/><text style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;fill:#888" x="296" y="96">Body (no action)</text><text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="296" y="110">Content display only</text>
-        <text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="10" y="192">Mobile-Selector · bg: teal/300 · border: primary/main · padding: 8px · radius: 4px</text>
-      </svg></div>
-    </div>
-    <div class="spec-card">
-      <div class="spec-label">Gesture zones</div>
-      <div class="spec-diagram"><svg width="100%" viewBox="0 0 520 120">
-        <rect x="24" y="10" width="234" height="90" rx="0 4 4 0" fill="#ace6e5" stroke="#01c5c1" stroke-width="1"/><rect x="10" y="10" width="14" height="90" rx="4 0 0 4" fill="#01c5c1"/>
-        <rect x="0" y="2" width="36" height="106" rx="6" fill="none" stroke="#534AB7" stroke-width="1.5" stroke-dasharray="4 3"/>
-        <rect x="119" y="0" width="44" height="44" rx="4" fill="none" stroke="#c33" stroke-width="1.5" stroke-dasharray="4 3"/><line x1="130" y1="22" x2="152" y2="22" stroke="#01c5c1" stroke-width="2.5" stroke-linecap="round"/>
-        <rect x="119" y="66" width="44" height="44" rx="4" fill="none" stroke="#c33" stroke-width="1.5" stroke-dasharray="4 3"/><line x1="130" y1="88" x2="152" y2="88" stroke="#01c5c1" stroke-width="2.5" stroke-linecap="round"/>
-        <rect x="40" y="26" width="212" height="58" rx="2" fill="none" stroke="#888" stroke-width="1" stroke-dasharray="4 3"/>
-        <line x1="258" y1="22" x2="290" y2="22" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/><text style="font-family:'DM Sans',sans-serif;font-size:11px;fill:#c33" x="296" y="18">Resize</text><text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="296" y="32">44x44 · touch-action: none</text>
-        <line x1="258" y1="55" x2="290" y2="55" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/><text style="font-family:'DM Sans',sans-serif;font-size:11px;fill:#888" x="296" y="51">No action (body)</text><text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="296" y="65">Content display only</text>
-        <line x1="0" y1="110" x2="0" y2="120" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/><text style="font-family:'DM Sans',sans-serif;font-size:11px;fill:#534AB7" x="8" y="120">Move (left rail only)</text>
-        <circle cx="296" cy="100" r="4" fill="#c33"/><text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#999" x="306" y="104">Resize</text><circle cx="358" cy="100" r="4" fill="#534AB7"/><text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#999" x="368" y="104">Move</text><circle cx="416" cy="100" r="4" fill="#888"/><text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#999" x="426" y="104">No action</text>
-      </svg></div>
-    </div>
-    <div class="spec-card">
-      <div class="spec-label">Handle reversal</div>
-      <div class="spec-diagram"><svg width="100%" viewBox="0 0 520 130">
-        <text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#999" x="55" y="12" text-anchor="middle">Start</text>
-        <rect x="24" y="20" width="76" height="68" rx="0 4 4 0" fill="#ace6e5" stroke="#01c5c1" stroke-width="1"/><rect x="10" y="20" width="14" height="68" rx="4 0 0 4" fill="#01c5c1"/><text style="font-family:Inter,sans-serif;font-size:10px;fill:#1c1c1c" x="22" y="50">09:00~10:00</text><text style="font-family:Inter,sans-serif;font-size:10px;fill:#1c1c1c" x="22" y="64">1h</text><line x1="35" y1="25" x2="75" y2="25" stroke="#01c5c1" stroke-width="2" stroke-linecap="round" opacity="0.4"/><line x1="35" y1="83" x2="75" y2="83" stroke="#01c5c1" stroke-width="2" stroke-linecap="round"/>
-        <text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#999" x="120" y="57">→</text>
-        <text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#999" x="195" y="12" text-anchor="middle">Min (15m)</text>
-        <rect x="164" y="63" width="76" height="18" rx="0 4 4 0" fill="#ace6e5" stroke="#01c5c1" stroke-width="1"/><rect x="150" y="63" width="14" height="18" rx="4 0 0 4" fill="#01c5c1"/><text style="font-family:Inter,sans-serif;font-size:10px;fill:#1c1c1c" x="183" y="76">15m</text><line x1="175" y1="65" x2="215" y2="65" stroke="#c33" stroke-width="2" stroke-linecap="round"/><line x1="175" y1="79" x2="215" y2="79" stroke="#01c5c1" stroke-width="2" stroke-linecap="round" opacity="0.4"/><text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#c33" x="195" y="100" text-anchor="middle">Flips to top</text>
-        <text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#999" x="260" y="57">→</text>
-        <text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#999" x="340" y="12" text-anchor="middle">Result</text>
-        <rect x="309" y="20" width="76" height="68" rx="0 4 4 0" fill="#ace6e5" stroke="#01c5c1" stroke-width="1"/><rect x="295" y="20" width="14" height="68" rx="4 0 0 4" fill="#01c5c1"/><text style="font-family:Inter,sans-serif;font-size:10px;fill:#1c1c1c" x="307" y="50">08:00~09:00</text><text style="font-family:Inter,sans-serif;font-size:10px;fill:#1c1c1c" x="307" y="64">1h</text><line x1="320" y1="25" x2="360" y2="25" stroke="#01c5c1" stroke-width="2" stroke-linecap="round"/><line x1="320" y1="83" x2="360" y2="83" stroke="#01c5c1" stroke-width="2" stroke-linecap="round" opacity="0.4"/><text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#999" x="340" y="104" text-anchor="middle">Top handle active</text>
-        <line x1="10" y1="122" x2="18" y2="122" stroke="#01c5c1" stroke-width="2" stroke-linecap="round"/><text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#999" x="24" y="126">Active</text><line x1="80" y1="122" x2="88" y2="122" stroke="#01c5c1" stroke-width="2" stroke-linecap="round" opacity="0.4"/><text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#999" x="94" y="126">Inactive</text><line x1="160" y1="122" x2="168" y2="122" stroke="#c33" stroke-width="2" stroke-linecap="round"/><text style="font-family:'DM Sans',sans-serif;font-size:10px;fill:#999" x="174" y="126">Flip</text>
+        <rect x="10" y="34" width="248" height="76" rx="4" fill="#ace6e5" stroke="#01c5c1" stroke-width="1"/><rect x="10" y="34" width="4" height="76" fill="#01c5c1"/>
+        <text style="font-family:Inter,sans-serif;font-size:11px;fill:#1c1c1c" x="22" y="58">09:00 ~ 18:00</text><text style="font-family:Inter,sans-serif;font-size:11px;fill:#1c1c1c" x="22" y="74">1h</text>
+        <rect x="112" y="17" width="44" height="44" rx="4" fill="none" stroke="#01c5c1" stroke-width="1.5" stroke-dasharray="4 3"/><line x1="123" y1="39" x2="145" y2="39" stroke="#01c5c1" stroke-width="2.5" stroke-linecap="round"/>
+        <rect x="112" y="83" width="44" height="44" rx="4" fill="none" stroke="#01c5c1" stroke-width="1.5" stroke-dasharray="4 3"/><line x1="123" y1="105" x2="145" y2="105" stroke="#01c5c1" stroke-width="2.5" stroke-linecap="round"/>
+        <rect x="16" y="48" width="236" height="48" rx="2" fill="none" stroke="#0F6E56" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <line x1="258" y1="39" x2="290" y2="39" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/>
+        <text style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;fill:#1a1a1a" x="296" y="35">Handle area</text><text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="296" y="49">44 x 44px · 22px teal line</text>
+        <line x1="258" y1="72" x2="290" y2="96" stroke="#ccc" stroke-width="0.5" stroke-dasharray="3 2"/>
+        <text style="font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;fill:#0F6E56" x="296" y="92">Move zone</text><text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="296" y="106">Entire body (excl. handles)</text>
+        <text style="font-family:'DM Mono',monospace;font-size:10px;fill:#999" x="10" y="192">Mobile-Selector · bg: teal/300 · border-left: primary/main · padding: 8px · radius: 4px</text>
       </svg></div>
     </div>
     <div class="spec-card">
       <div class="spec-label">Behavior rules</div>
       <div class="rule-list">
-        <div class="rule-item"><div class="rule-num">1</div><div>Place one editable 1h event in first available slot on load. Auto-scroll to it. <span class="tag-p tag-must">must</span></div></div>
-        <div class="rule-item"><div class="rule-num">2</div><div>Left rail (14px visible, 36px touch target) is the only move handle. Event body has no gesture. <span class="tag-p tag-must">must</span></div></div>
-        <div class="rule-item"><div class="rule-num">3</div><div>Two center handles (top/bottom) to resize. Each handle uses <span class="code-i">setPointerCapture</span> on <span class="code-i">pointerdown</span>. <span class="tag-p tag-must">must</span></div></div>
-        <div class="rule-item"><div class="rule-num">4</div><div>Snap all edges to 15-min grid. Minimum duration: 15m. <span class="tag-p tag-must">must</span></div></div>
-        <div class="rule-item"><div class="rule-num">5</div><div>Handle reversal: when a resize handle is dragged past the opposite edge, swap which end is being resized. <span class="tag-p tag-must">must</span></div></div>
-        <div class="rule-item"><div class="rule-num">6</div><div>Overlap layout: when events share any time range, split them into equal-width columns. Events that only touch (end&thinsp;==&thinsp;start) stay full width. <span class="tag-p tag-must">must</span></div></div>
-        <div class="rule-item"><div class="rule-num">7</div><div>Auto-scroll timeline when pointer is within 60px of top/bottom edge. Max speed: 8px/frame. <span class="tag-p tag-should">should</span></div></div>
+        <div class="rule-item"><div class="rule-num">1</div><div>Default 1h event in first available slot on load. Tap empty timeline space to reposition — creates a new 1h event at the tapped position (snapped to 15-min grid). <span class="tag-p tag-must">must</span></div></div>
+        <div class="rule-item"><div class="rule-num">2</div><div>One editable event at a time. Each tap replaces the current event at the new position. <span class="tag-p tag-must">must</span></div></div>
+        <div class="rule-item"><div class="rule-num">3</div><div>Drag event body to move. Requires 10px pointer travel before activating (prevents accidental drags). <span class="tag-p tag-must">must</span></div></div>
+        <div class="rule-item"><div class="rule-num">4</div><div>Two center handles (top/bottom) to resize. Each handle uses <span class="code-i">setPointerCapture</span> on <span class="code-i">pointerdown</span>. <span class="tag-p tag-must">must</span></div></div>
+        <div class="rule-item"><div class="rule-num">5</div><div>Snap all edges to 15-min grid. Minimum duration: 15m. <span class="tag-p tag-must">must</span></div></div>
+        <div class="rule-item"><div class="rule-num">6</div><div>Handle reversal: when a resize handle is dragged past the opposite edge, swap which end is being resized. <span class="tag-p tag-must">must</span></div></div>
+        <div class="rule-item"><div class="rule-num">7</div><div>Overlap layout: when events share any time range, split them into equal-width columns. Events that only touch (end&thinsp;==&thinsp;start) stay full width. <span class="tag-p tag-must">must</span></div></div>
+        <div class="rule-item"><div class="rule-num">8</div><div>Auto-scroll timeline when pointer is within 60px of top/bottom edge. Max speed: 8px/frame. <span class="tag-p tag-should">should</span></div></div>
       </div>
       <div class="spec-divider"></div>
       <div class="rule-title">Mobile safety</div>
       <div class="rule-list">
-        <div class="rule-item"><div class="rule-num">8</div><div>No drag-to-create — long-press on empty space must not start an event (conflicts with native scroll). <span class="tag-p tag-must">must</span></div></div>
-        <div class="rule-item"><div class="rule-num">9</div><div>Set <span class="code-i">touch-action: none</span> on left rail and resize handles only. Body and background keep native scroll. <span class="tag-p tag-must">must</span></div></div>
+        <div class="rule-item"><div class="rule-num">9</div><div>Set <span class="code-i">touch-action: none</span> on event body and handles only. Background keeps native scroll. <span class="tag-p tag-must">must</span></div></div>
         <div class="rule-item"><div class="rule-num">10</div><div>Listen <span class="code-i">pointercancel</span> — revert to pre-drag position if browser reclaims the gesture. <span class="tag-p tag-must">must</span></div></div>
         <div class="rule-item"><div class="rule-num">11</div><div>Use <span class="code-i">style.height</span> (not <span class="code-i">offsetHeight</span>) when computing overlap columns during drag. <span class="tag-p tag-should">should</span></div></div>
       </div>
+    </div>
   </div>
-</div>
 </div>
 </div>
 
@@ -801,38 +723,43 @@ function attachBodyMove(ev,tl,sid,doRelayout,blockPresets,warnOverlap){
   ev.addEventListener('pointerup',stop);ev.addEventListener('pointercancel',cancel);
 }
 
-// ── left-handle move ───────────────────────────────────────────────────
-function attachLeftHandleMove(ev,tl,sid,doRelayout,blockPresets,warnOverlap){
-  var scroller=createAutoScroller(tl);
-  var di=document.createElement('div');di.className='drop-ind';tl.querySelector('.tl-inner').appendChild(di);
-  var rail=document.createElement('div');rail.className='left-move-handle';
-  [0,1,2].forEach(function(){var s=document.createElement('span');rail.appendChild(s)});
-  ev.appendChild(rail);
-  var mv=false,sY=0,sTop=0,eH=0,gO=0;
-  rail.addEventListener('pointerdown',function(e){e.stopPropagation();e.preventDefault();sY=e.clientY;sTop=getEvTop(ev);eH=getEvH(ev);mv=false;var r=tl.getBoundingClientRect();gO=(e.clientY-r.top+tl.scrollTop)-sTop;rail.setPointerCapture(e.pointerId);tl.style.overflowY='hidden';setStatus(sid,'moving\u2026')});
-  function doMove(cy){
-    var r=tl.getBoundingClientRect(),nT=Math.max(OFF,snapTop((cy-r.top+tl.scrollTop)-gO));
-    if(blockPresets){var c=clampMove(presetRanges(tl),nT,eH);nT=c.top;eH=c.height;ev.style.height=eH+'px';di.style.height=eH+'px';}
-    di.style.top=nT+'px';ev.style.top=nT+'px';ev.querySelector('.label').innerHTML=timeLabel(nT,eH);
+// ── tap-to-create ─────────────────────────────────────────────────────
+function attachTapCreate(tl,sid,doRelayout,warnOverlap){
+  tl.addEventListener('pointerup',function(e){
+    // Only trigger on taps on the timeline background (not on events/handles)
+    if(e.target.closest('.ev'))return;
+    var r=tl.getBoundingClientRect();
+    var tapY=e.clientY-r.top+tl.scrollTop;
+    var nT=snapTop(tapY-H/2); // center the 1h event on the tap point
+    // Remove any existing editable event
+    var old=tl.querySelector('.ev.new-a');
+    if(old)old.remove();
+    // Also remove its drop indicator
+    var oldDi=tl.querySelector('.drop-ind');
+    if(oldDi)oldDi.remove();
+    // Create new event
+    var ev=document.createElement('div');
+    ev.className='ev new-a';
+    ev.style.cssText='top:'+nT+'px;height:'+H+'px;left:'+COL_START+'px;right:'+COL_END_MARGIN+'px;';
+    ev.innerHTML='<div class="label">'+timeLabel(nT,H)+'</div>';
+    makeResizeHandles(ev,tl,sid,doRelayout,false,warnOverlap);
+    attachBodyMove(ev,tl,sid,doRelayout,false,warnOverlap);
+    tl.querySelector('.tl-inner').appendChild(ev);
     if(warnOverlap)updateOverlapState(ev,tl);
-    if(doRelayout)relayout(tl)
-  }
-  rail.addEventListener('pointermove',function(e){if(!rail.hasPointerCapture(e.pointerId))return;if(!mv&&Math.abs(e.clientY-sY)>4){mv=true;rail.classList.add('dragging');di.style.height=eH+'px';di.style.left=COL_START+'px';di.style.right=COL_END_MARGIN+'px';di.style.display='block'}if(mv){doMove(e.clientY);scroller.update(e.clientY,function(cy){doMove(cy)})}});
-  var stop=function(){if(mv){scroller.stop();if(doRelayout)relayout(tl);setStatus(sid,'\u2713 moved')}mv=false;rail.classList.remove('dragging');di.style.display='none';tl.style.overflowY='scroll'};
-  var cancel=function(){scroller.stop();ev.style.top=sTop+'px';ev.querySelector('.label').innerHTML=timeLabel(sTop,eH);mv=false;rail.classList.remove('dragging');di.style.display='none';tl.style.overflowY='scroll';if(doRelayout)relayout(tl)};
-  rail.addEventListener('pointerup',stop);rail.addEventListener('pointercancel',cancel);
+    if(doRelayout)relayout(tl);
+    setStatus(sid,'\u2713 created at '+minsToTime(9*60+Math.round((nT-OFF)/SLOT)*15));
+  });
 }
 
 // ── place editable event ───────────────────────────────────────────────
-function placeEvent(tl,moveMode,sid,doRelayout,blockPresets,warnOverlap){
+function placeEvent(tl,sid,doRelayout,blockPresets,warnOverlap){
   var topPx=firstFreeSlot(tl);
   var ev=document.createElement('div');
-  ev.className='ev '+(moveMode==='a'?'new-a':'new-b');
+  ev.className='ev new-a';
   ev.style.cssText='top:'+topPx+'px;height:'+H+'px;left:'+COL_START+'px;right:'+COL_END_MARGIN+'px;';
   ev.innerHTML='<div class="label">'+timeLabel(topPx,H)+'</div>';
   makeResizeHandles(ev,tl,sid,doRelayout,blockPresets,warnOverlap);
-  if(moveMode==='a') attachBodyMove(ev,tl,sid,doRelayout,blockPresets,warnOverlap);
-  else               attachLeftHandleMove(ev,tl,sid,doRelayout,blockPresets,warnOverlap);
+  attachBodyMove(ev,tl,sid,doRelayout,blockPresets,warnOverlap);
   tl.querySelector('.tl-inner').appendChild(ev);
   requestAnimationFrame(function(){
     if(doRelayout)relayout(tl);
@@ -843,18 +770,26 @@ function placeEvent(tl,moveMode,sid,doRelayout,blockPresets,warnOverlap){
 
 // ── initialise all four timelines ──────────────────────────────────────
 (function(){
-  placeEvent(buildTL('tl-sa',SINGLE_PRESETS),'a','s-sa',false,false,true);
-  placeEvent(buildTL('tl-sb',SINGLE_PRESETS),'b','s-sb',false,false,true);
-  placeEvent(buildTL('tl-ma',MULTI_PRESETS), 'a','s-ma',true, false,false);
-  placeEvent(buildTL('tl-mb',MULTI_PRESETS), 'b','s-mb',true, false,false);
+  // Body move tabs — pre-place an event
+  placeEvent(buildTL('tl-sa',SINGLE_PRESETS),'s-sa',false,false,true);
+  placeEvent(buildTL('tl-ma',MULTI_PRESETS),'s-ma',true, false,false);
+
+  // Tap-create tabs — default 1h event + tap handler to replace it
+  var tlSC=buildTL('tl-sc',SINGLE_PRESETS);
+  placeEvent(tlSC,'s-sc',false,false,true);
+  attachTapCreate(tlSC,'s-sc',false,true);
+
+  var tlMC=buildTL('tl-mc',MULTI_PRESETS);
+  placeEvent(tlMC,'s-mc',true,false,false);
+  attachTapCreate(tlMC,'s-mc',true,false);
 })();
 
 // ── tab switcher ───────────────────────────────────────────────────────
 var TAB_HINTS={
   sa:'drag body to move \u00b7 center handles to resize',
-  sb:'left handle to move \u00b7 center handles to resize',
+  sc:'tap empty space to create \u00b7 drag to move \u00b7 handles to resize',
   ma:'drag body to move \u00b7 center handles to resize',
-  mb:'left handle to move \u00b7 center handles to resize'
+  mc:'tap empty space to create \u00b7 drag to move \u00b7 handles to resize'
 };
 function switchTab(id,btn){
   document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active')});
